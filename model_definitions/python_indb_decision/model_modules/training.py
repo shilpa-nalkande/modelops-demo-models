@@ -4,7 +4,8 @@ from teradataml import (
     ScaleFit,
     ScaleTransform,
 )
-
+from teradataml import td_sklearn as osml
+from lime.lime_tabular import LimeTabularExplainer
 from aoa import (
     record_training_stats,
     aoa_create_context,
@@ -15,6 +16,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import json
+import dill
 from collections import Counter
 
 # Define a function to recursively traverse a decision tree and count the usage of features
@@ -56,7 +58,8 @@ def train(context: ModelContext, **kwargs):
     train_df = DataFrame.from_query(context.dataset_info.sql)
 
     print ("Scaling using InDB Functions...")
-    
+    X_train = train_df.drop(['anomaly_int','WELDING_ID'], axis = 1)
+    y_train = train_df.select(["anomaly_int"])
     # Scale the training data using the ScaleFit and ScaleTransform functions
     scaler = ScaleFit(
         data=train_df,
@@ -92,7 +95,18 @@ def train(context: ModelContext, **kwargs):
     # Save the trained model to SQL
     model.result.to_sql(f"model_${context.model_version}", if_exists="replace")  
     print("Saved trained model")
-
+    
+    print("Starting osml training...")
+    DT_classifier = osml.DecisionTreeClassifier(random_state=42)
+    DT_classifier.fit(X_train, y_train)
+    DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
+    explainer = LimeTabularExplainer(X_train.get_values(), feature_names=X_train.columns,
+                                            class_names=['Anomaly','NoAnomaly'], verbose=True, mode='classification')
+    
+    with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:
+        dill.dump(explainer, f)
+    print("Complete osml training...")
+    
     # Calculate feature importance and generate plot
     model_pdf = model.result.to_pandas()['classification_tree']
     feature_importance = compute_feature_importance(model_pdf)

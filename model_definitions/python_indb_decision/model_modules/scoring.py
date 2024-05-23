@@ -1,3 +1,4 @@
+from teradataml import td_sklearn as osml
 from teradataml import (
     copy_to_sql,
     DataFrame,
@@ -26,6 +27,8 @@ def score(context: ModelContext, **kwargs):
 
     # Load the test dataset
     test_df = DataFrame.from_query(context.dataset_info.sql)
+    X_test = test_df.drop(['anomaly_int','WELDING_ID'], axis = 1)
+    y_test = test_df.select(["anomaly_int"])
     features_tdf = DataFrame.from_query(context.dataset_info.sql)
     features_pdf = features_tdf.to_pandas(all_rows=True)
 
@@ -64,8 +67,11 @@ def score(context: ModelContext, **kwargs):
     # Convert predictions to pandas DataFrame and process
     predictions_pdf = predictions.result.to_pandas(all_rows=True).rename(columns={"prediction": target_name}).astype(int)
     # print(predictions_pdf)
+    print("Scoring using osml...")
+    DT_classifier = osml.load(model_name="DT_classifier")
+    predict_DT =DT_classifier.predict(X_test,y_test)
     print("Finished Scoring")
-
+    
     # store the predictions
     predictions_pdf = pd.DataFrame(predictions_pdf, columns=[target_name])
     predictions_pdf[entity_key] = features_pdf.index.values
@@ -91,6 +97,13 @@ def score(context: ModelContext, **kwargs):
         df=predictions_pdf,
         schema_name=context.dataset_info.predictions_database,
         table_name=context.dataset_info.predictions_table,
+        index=False,
+        if_exists="replace"
+    )
+    copy_to_sql(
+        df=predict_DT,
+        schema_name=context.dataset_info.predictions_database,
+        table_name="predict_DT_osml",
         index=False,
         if_exists="replace"
     )
