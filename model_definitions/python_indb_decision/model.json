@@ -1,0 +1,6 @@
+{
+    "id": "20834048-7ac3-4c06-8bbd-631e2a10c39c",
+    "name": "In-database Anomaly Detection Decision Forest",
+    "description": "In-database Decision Forest for Anomaly Detection in Spot Welding",
+    "language": "python"
+}
