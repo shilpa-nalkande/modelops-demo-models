@@ -27,8 +27,8 @@ def score(context: ModelContext, **kwargs):
 
     # Load the test dataset
     test_df = DataFrame.from_query(context.dataset_info.sql)
-    X_test = test_df.drop(['anomaly_int','WELDING_ID'], axis = 1)
-    y_test = test_df.select(["anomaly_int"])
+    X_test = test_df.drop(['WELDING_ID'], axis = 1)
+    # y_test = test_df.select(["anomaly_int"])
     features_tdf = DataFrame.from_query(context.dataset_info.sql)
     features_pdf = features_tdf.to_pandas(all_rows=True)
 
@@ -69,7 +69,7 @@ def score(context: ModelContext, **kwargs):
     # print(predictions_pdf)
     print("Scoring using osml...")
     DT_classifier = osml.load(model_name="DT_classifier")
-    predict_DT =DT_classifier.predict(X_test,y_test)
+    predict_DT =DT_classifier.predict(X_test)
     print("Finished Scoring")
     
     # store the predictions
