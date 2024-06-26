@@ -1,6 +1,6 @@
 {
-    "id": "e9dd5040-863f-4c2b-bfb7-5a9ebc91a0d7	",
-    "name": "In-database Anomaly Detection Decision Forest",
-    "description": "In-database Decision Forest for Anomaly Detection in Spot Welding",
+    "id": "00d4839f-784f-405e-8985-2cc6904cfe39",
+    "name": "Anomaly Detection using teradataml OpenSource DecisionTreeClassifier",
+    "description": "teradataml OpenSource DecisionTreeClassifier for Anomaly Detection in Spot Welding",
     "language": "python"
 }

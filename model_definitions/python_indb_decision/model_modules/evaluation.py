@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 import matplotlib.pyplot as plt
 from teradataml import td_sklearn as osml
 from lime.lime_tabular import LimeTabularExplainer
@@ -26,7 +26,11 @@ import dill
 import numpy as np
 import pandas as pd
 import os
-
+import warnings
+warnings.filterwarnings('ignore')
+warnings.simplefilter(action='ignore', category=DeprecationWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Define function to traverse a decision tree and count feature occurrences
 def traverse_tree(tree, feature_counter):
@@ -79,9 +83,9 @@ def plot_confusion_matrix(cf, img_filename):
 # Define function to plot ROC curve from ROC output data 
 def plot_roc_curve(roc_out, img_filename):
     import matplotlib.pyplot as plt
-    auc = roc_out.result.to_pandas().reset_index()['AUC'][0]
+    auc = roc_out.result.to_pandas().iloc[0,0]
     roc_results = roc_out.output_data.to_pandas()
-    plt.plot(roc_results['fpr'], roc_results['tpr'], color='darkorange', lw=2, label='ROC curve (AUC = %0.2f)' % 0.27)
+    plt.plot(roc_results['fpr'], roc_results['tpr'], color='darkorange', lw=2, label='ROC curve (AUC = %0.2f)' %auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -90,7 +94,7 @@ def plot_roc_curve(roc_out, img_filename):
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend(loc="lower right")
     fig = plt.gcf()
-    fig.savefig(img_filename, dpi=500)
+    fig.savefig(img_filename, dpi=200)
     plt.clf()
     
 # Define function to plot ROC curve from ROC output data 
@@ -114,7 +118,7 @@ def evaluate(context: ModelContext, **kwargs):
     aoa_create_context()
 
     # Load the trained model from SQL
-    model = DataFrame(f"model_${context.model_version}")
+    # model = DataFrame(f"model_${context.model_version}")
 
     feature_names = context.dataset_info.feature_names
     target_name = context.dataset_info.target_names[0]
@@ -134,47 +138,11 @@ def evaluate(context: ModelContext, **kwargs):
         accumulate = [target_name,entity_key]
     )
     
-    print("Evaluating...")
-    # Make predictions using the XGBoostPredict function
-    # predictions = XGBoostPredict(
-    #     object=model,
-    #     newdata=scaled_test.result,
-    #     model_type = 'Classification',
-    #     accumulate=target_name,
-    #     id_column=entity_key,
-    #     output_prob=True,
-    #     output_responses=['0','1'],
-    #     object_order_column=['task_index', 'tree_num', 'iter', 'class_num', 'tree_order']
-    # )
-    
-    predictions = TDDecisionForestPredict(object = model,
-                                        newdata = scaled_test.result,
-                                        id_column = "WELDING_ID",
-                                        detailed = False,
-                                        output_prob = True,
-                                        output_responses = ['0','1'],
-                                        accumulate = 'anomaly_int')
-
-    # Convert the predicted data into the specified format
-    predicted_data = ConvertTo(
-        data = predictions.result,
-        target_columns = [target_name,'prediction'],
-        target_datatype = ["INTEGER"]
-    )
-
-    # Evaluate classification metrics using ClassificationEvaluator
-    ClassificationEvaluator_obj = ClassificationEvaluator(
-        data=predicted_data.result,
-        observation_column=target_name,
-        prediction_column='prediction',
-        num_labels=2
-    )
-
-     # Extract and store evaluation metrics
-    metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
     print("Evaluating osml...")
     DT_classifier = osml.load(model_name="DT_classifier")
     predict_DT =DT_classifier.predict(X_test,y_test)
+    # predict_prob =DT_classifier.predict_proba(X_test)
+    # print(predict_prob)
     accuracy_DT = DT_classifier.score(X_test, y_test)
     df = X_test.sample(n=1)
     df = df.drop(columns="sampleid")
@@ -182,6 +150,23 @@ def evaluate(context: ModelContext, **kwargs):
         explainer = dill.load(f)
        
     exp = explainer.explain_instance(df.get_values().flatten(), DT_classifier.modelObj.predict_proba, num_features=9)
+    
+#     predicted_data = ConvertTo(
+#         data = predictions.result,
+#         target_columns = [target_name,'prediction'],
+#         target_datatype = ["INTEGER"]
+#     )
+
+    # Evaluate classification metrics using ClassificationEvaluator
+    ClassificationEvaluator_obj = ClassificationEvaluator(
+        data=predict_DT,
+        observation_column=target_name,
+        prediction_column='decisiontreeclassifier_predict_1',
+        num_labels=2
+    )
+
+#      # Extract and store evaluation metrics
+    metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
     
      
          
@@ -192,7 +177,7 @@ def evaluate(context: ModelContext, **kwargs):
 #     shap_values = explainer_shap.shap_values(X_test.to_pandas())
 #     shap_values = np.transpose(shap_values, (2, 0, 1))  
 #     shap_values50 = explainer_shap.shap_values(X_test.to_pandas().iloc[1:50, :])
-    accuracy_osml = accuracy_DT.to_pandas()
+    # accuracy_osml = accuracy_DT.to_pandas()
     evaluation = {
         'Accuracy': '{:.2f}'.format(metrics_pd.MetricValue[0]),
         'Micro-Precision': '{:.2f}'.format(metrics_pd.MetricValue[1]),
@@ -204,7 +189,7 @@ def evaluate(context: ModelContext, **kwargs):
         'Weighted-Precision': '{:.2f}'.format(metrics_pd.MetricValue[7]),
         'Weighted-Recall': '{:.2f}'.format(metrics_pd.MetricValue[8]),
         'Weighted-F1': '{:.2f}'.format(metrics_pd.MetricValue[9]),
-        'Accuracy-osml': '{:.2f}'.format(accuracy_osml.score[0]),
+        # 'Accuracy-osml': '{:.2f}'.format(accuracy_osml.score[0]),
     }
 
      # Save evaluation metrics to a JSON file
@@ -212,18 +197,21 @@ def evaluate(context: ModelContext, **kwargs):
         json.dump(evaluation, f)
         
     # Generate and save confusion matrix plot
-    cm = confusion_matrix(predicted_data.result.to_pandas()['anomaly_int'], predicted_data.result.to_pandas()['prediction'])
+    cm = confusion_matrix(predict_DT.to_pandas()['anomaly_int'], predict_DT.to_pandas()['decisiontreeclassifier_predict_1'])
     plot_confusion_matrix(cm, f"{context.artifact_output_path}/confusion_matrix")
     # dt_explain(shap_values[0],X_test,f"{context.artifact_output_path}/shap_exp.png")
     # dt_explain(explainer_shap.expected_value[0], shap_values50 ,X_test.to_pandas().iloc[1:50, :],f"{context.artifact_output_path}/shap_exp.png")
     # Generate and save ROC curve plot
     roc_out = ROC(
-        data=predictions.result,
-        probability_column='prob_1',
+        data=predict_DT,
+        probability_column='decisiontreeclassifier_predict_1',
         observation_column=target_name,
         positive_class='1',
         num_thresholds=1000
     )
+    
+    # fpr, tpr, thresholds = roc_curve(y_true, y_score)
+    # roc_auc = auc(fpr, tpr)
     plot_roc_curve(roc_out, f"{context.artifact_output_path}/roc_curve")
     # exp.show_in_notebook(show_table=True)
     # dt_explain(exp, f"{context.artifact_output_path}/explain_pred.html")
@@ -240,7 +228,7 @@ def evaluate(context: ModelContext, **kwargs):
         feature_importance = {}
 
     predictions_table = "predictions_tmp"
-    copy_to_sql(df=predicted_data.result, table_name=predictions_table, index=False, if_exists="replace", temporary=True)
+    copy_to_sql(df=predict_DT, table_name=predictions_table, index=False, if_exists="replace", temporary=True)
     
     
     # calculate stats if training stats exist

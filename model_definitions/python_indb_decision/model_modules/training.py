@@ -18,30 +18,24 @@ import numpy as np
 import json
 import dill
 from collections import Counter
-
-# Define a function to recursively traverse a decision tree and count the usage of features
-def traverse_tree(tree, feature_counter):
-    if 'split_' in tree and 'attr_' in tree['split_']:
-        feature_counter[tree['split_']['attr_']] += 1
-    if 'leftChild_' in tree:
-        traverse_tree(tree['leftChild_'], feature_counter)
-    if 'rightChild_' in tree:
-        traverse_tree(tree['rightChild_'], feature_counter)
+import warnings
+warnings.filterwarnings('ignore')
+warnings.simplefilter(action='ignore', category=DeprecationWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Compute feature importance based on tree traversal
-def compute_feature_importance(trees_json):
-    feature_counter = Counter()
-    for tree_json in trees_json:
-        tree = json.loads(tree_json)
-        traverse_tree(tree, feature_counter)
-    total_splits = sum(feature_counter.values())
-    feature_importance = {feature: count / total_splits for feature, count in feature_counter.items()}
-    return feature_importance
-
+def compute_feature_importance(model,X_train):
+    feat_dict= {}
+    for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
+        feat_dict[col]=val
+    feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
+    # print(feat_df)
+    return feat_df
 
 def plot_feature_importance(fi, img_filename):
-    feat_importances = pd.Series(fi)
-    feat_importances.nlargest(10).plot(kind='barh').set_title('Feature Importance')
+    feat_importances = fi.sort_values(['Importance'],ascending = False).head(10)
+    feat_importances.plot(kind='barh').set_title('Feature Importance')
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
@@ -77,31 +71,13 @@ def train(context: ModelContext, **kwargs):
     scaler.output.to_sql(f"scaler_${context.model_version}", if_exists="replace")
     print("Saved scaler")
     
-    print("Starting training...")
-
-    # Train the model using DecisionForest
-    model = DecisionForest(data=scaled_train.result, 
-                           input_columns = ['std_RESISTANCE','kurtosis_RESISTANCE','min_resistance_diff','skew_RESISTANCE',
-                                            'sum_RESISTANCE','max_RESISTANCE','var_RESISTANCE','mean_RESISTANCE','min_RESISTANCE'], 
-                            response_column = 'anomaly_int', 
-                            max_depth = 16, 
-                            num_trees = 8, 
-                            min_node_size = 1, 
-                            mtry = 1, 
-                            mtry_seed = 3, 
-                            seed = 3, 
-                            tree_type = 'CLASSIFICATION')
-
-    # Save the trained model to SQL
-    model.result.to_sql(f"model_${context.model_version}", if_exists="replace")  
-    print("Saved trained model")
-    
-    print("Starting osml training...")
-    DT_classifier = osml.DecisionTreeClassifier(random_state=42)
+         
+    print("Starting training using teradata osml...")
+    DT_classifier = osml.DecisionTreeClassifier(random_state=10,max_leaf_nodes=2,max_features='auto',max_depth=2)
     DT_classifier.fit(X_train, y_train)
     DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
     explainer = LimeTabularExplainer(X_train.get_values(), feature_names=X_train.columns,
-                                            class_names=['Anomaly','NoAnomaly'], verbose=True, mode='classification')
+                                            class_names=['Anomaly','NoAnomaly'], verbose=False, mode='classification')
     
     #with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:
     with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:   
@@ -115,8 +91,9 @@ def train(context: ModelContext, **kwargs):
     print("Complete osml training...")
     
     # Calculate feature importance and generate plot
-    model_pdf = model.result.to_pandas()['classification_tree']
-    feature_importance = compute_feature_importance(model_pdf)
+    # model_pdf = model.result.to_pandas()['classification_tree']
+    # feature_importance = compute_feature_importance(model_pdf)
+    feature_importance = compute_feature_importance(DT_classifier,X_train)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
     
 
