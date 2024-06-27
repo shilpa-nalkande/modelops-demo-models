@@ -32,33 +32,19 @@ warnings.simplefilter(action='ignore', category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Define function to traverse a decision tree and count feature occurrences
-def traverse_tree(tree, feature_counter):
-    if 'split_' in tree and 'attr_' in tree['split_']:
-        feature_counter[tree['split_']['attr_']] += 1
-    if 'leftChild_' in tree:
-        traverse_tree(tree['leftChild_'], feature_counter)
-    if 'rightChild_' in tree:
-        traverse_tree(tree['rightChild_'], feature_counter)
-
         
-# Define function to compute feature importance from tree structures
-def compute_feature_importance(trees_json):
-    feature_counter = Counter()
-    for tree_json in trees_json:
-        tree = json.loads(tree_json)
-        traverse_tree(tree, feature_counter)
-    total_splits = sum(feature_counter.values())
-    feature_importance = {feature: count / total_splits for feature, count in feature_counter.items()}
-    return feature_importance
+# Compute feature importance based on tree traversal
+def compute_feature_importance(model,X_train):
+    feat_dict= {}
+    for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
+        feat_dict[col]=val
+    feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
+    # print(feat_df)
+    return feat_df
 
-
-# Define a function to plot feature importances
 def plot_feature_importance(fi, img_filename):
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    feat_importances = pd.Series(fi)
-    feat_importances.nlargest(10).plot(kind='barh').set_title('Feature Importance')
+    feat_importances = fi.sort_values(['Importance'],ascending = False).head(10)
+    feat_importances.plot(kind='barh').set_title('Feature Importance')
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
@@ -83,12 +69,17 @@ def plot_confusion_matrix(cf, img_filename):
 # Define function to plot ROC curve from ROC output data 
 def plot_roc_curve(roc_out, img_filename):
     import matplotlib.pyplot as plt
-    auc = roc_out.result.to_pandas().iloc[0,0]
-    roc_results = roc_out.output_data.to_pandas()
-    plt.plot(roc_results['fpr'], roc_results['tpr'], color='darkorange', lw=2, label='ROC curve (AUC = %0.2f)' %auc)
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    from sklearn import metrics
+    # auc = roc_out.result.to_pandas().iloc[0,0]
+    # roc_results = roc_out.output_data.to_pandas()
+    fpr, tpr, thresholds = metrics.roc_curve(roc_out['anomaly_int'], roc_out['decisiontreeclassifier_predict_1'])
+    auc = metrics.auc(fpr, tpr)
+    # plt.plot(roc_results['fpr'], roc_results['tpr'], color='darkorange', lw=2, label='ROC curve (AUC = %0.2f)' %auc)
+    # plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    # plt.xlim([0.0, 1.0])
+    # plt.ylim([0.0, 1.05])
+    plt.plot(fpr,tpr,label="ROC curve AUC="+str(auc), color='darkorange')
+    plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--') 
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
@@ -97,20 +88,6 @@ def plot_roc_curve(roc_out, img_filename):
     fig.savefig(img_filename, dpi=200)
     plt.clf()
     
-# Define function to plot ROC curve from ROC output data 
-# def dt_explain(expec_val,shap_val, X_test, img_filename):
-#     import shap
-#     import matplotlib.pyplot as plt
-#     # fig = exp_out.show_in_notebook(show_table=True)
-#     # fig.savefig(img_filename, dpi=500)
-#     # exp.as_list() 
-#     # with open(f"{context.artifact_output_path}/shap_val.png", "w+") as f:
-        
-#     # fig = shap.summary_plot(shap_val, X_test.to_pandas(),show=False)
-#     fig = shap.plots.force(expec_val, shap_val, X_test)
-#     plt.savefig(img_filename, dpi=500)
-#     plt.clf()
-#     # Save evaluation metrics to a JSON file
     
 
 def evaluate(context: ModelContext, **kwargs):
@@ -151,11 +128,6 @@ def evaluate(context: ModelContext, **kwargs):
        
     exp = explainer.explain_instance(df.get_values().flatten(), DT_classifier.modelObj.predict_proba, num_features=9)
     
-#     predicted_data = ConvertTo(
-#         data = predictions.result,
-#         target_columns = [target_name,'prediction'],
-#         target_datatype = ["INTEGER"]
-#     )
 
     # Evaluate classification metrics using ClassificationEvaluator
     ClassificationEvaluator_obj = ClassificationEvaluator(
@@ -167,28 +139,25 @@ def evaluate(context: ModelContext, **kwargs):
 
 #      # Extract and store evaluation metrics
     metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
-    
+    #print(metrics_pd)
+    # y_true_df = predict_DT.select(['anomaly_int'])
+    # y_pred_df = predict_DT.select(['decisiontreeclassifier_predict_1'])
+    # opt = osml.classification_report(y_true=y_true_df, y_pred=y_pred_df, output_dict=True, target_names=["class 0", "class 1"])
+    # report_df = pd.DataFrame(opt)
+    # print(report_df)
      
          
-#     with open(f"{context.artifact_input_path}/exp_shap_obj", 'rb') as f:
-#         explainer_shap = dill.load(f)
-    
-#     explanation = explainer_shap(X_test.to_pandas())
-#     shap_values = explainer_shap.shap_values(X_test.to_pandas())
-#     shap_values = np.transpose(shap_values, (2, 0, 1))  
-#     shap_values50 = explainer_shap.shap_values(X_test.to_pandas().iloc[1:50, :])
-    # accuracy_osml = accuracy_DT.to_pandas()
     evaluation = {
-        'Accuracy': '{:.2f}'.format(metrics_pd.MetricValue[0]),
-        'Micro-Precision': '{:.2f}'.format(metrics_pd.MetricValue[1]),
-        'Micro-Recall': '{:.2f}'.format(metrics_pd.MetricValue[2]),
-        'Micro-F1': '{:.2f}'.format(metrics_pd.MetricValue[3]),
-        'Macro-Precision': '{:.2f}'.format(metrics_pd.MetricValue[4]),
-        'Macro-Recall': '{:.2f}'.format(metrics_pd.MetricValue[5]),
-        'Macro-F1': '{:.2f}'.format(metrics_pd.MetricValue[6]),
-        'Weighted-Precision': '{:.2f}'.format(metrics_pd.MetricValue[7]),
-        'Weighted-Recall': '{:.2f}'.format(metrics_pd.MetricValue[8]),
-        'Weighted-F1': '{:.2f}'.format(metrics_pd.MetricValue[9]),
+        'Accuracy': '{:.4f}'.format(metrics_pd.MetricValue[0]),
+        'Micro-Precision': '{:.4f}'.format(metrics_pd.MetricValue[1]),
+        'Micro-Recall': '{:.4f}'.format(metrics_pd.MetricValue[2]),
+        'Micro-F1': '{:.4f}'.format(metrics_pd.MetricValue[3]),
+        'Macro-Precision': '{:.4f}'.format(metrics_pd.MetricValue[4]),
+        'Macro-Recall': '{:.4f}'.format(metrics_pd.MetricValue[5]),
+        'Macro-F1': '{:.4f}'.format(metrics_pd.MetricValue[6]),
+        'Weighted-Precision': '{:.4f}'.format(metrics_pd.MetricValue[7]),
+        'Weighted-Recall': '{:.4f}'.format(metrics_pd.MetricValue[8]),
+        'Weighted-F1': '{:.4f}'.format(metrics_pd.MetricValue[9]),
         # 'Accuracy-osml': '{:.2f}'.format(accuracy_osml.score[0]),
     }
 
@@ -212,20 +181,21 @@ def evaluate(context: ModelContext, **kwargs):
     
     # fpr, tpr, thresholds = roc_curve(y_true, y_score)
     # roc_auc = auc(fpr, tpr)
-    plot_roc_curve(roc_out, f"{context.artifact_output_path}/roc_curve")
+    # plot_roc_curve(roc_out, f"{context.artifact_output_path}/roc_curve")
+    plot_roc_curve(predict_DT.to_pandas(), f"{context.artifact_output_path}/roc_curve")
     # exp.show_in_notebook(show_table=True)
     # dt_explain(exp, f"{context.artifact_output_path}/explain_pred.html")
     exp.save_to_file(f"{context.artifact_output_path}/expimg.html")
-    with open(f"{context.artifact_output_path}/exp_features.json", "w+") as f:
-        json.dump(exp.as_list(), f)
+    # with open(f"{context.artifact_output_path}/exp_features.json", "w+") as f:
+    #     json.dump(exp.as_list(), f)
     # Calculate feature importance and generate plot
-    try:
-        model_pdf = model.result.to_pandas()['classification_tree']
-        feature_importance = compute_feature_importance(model_pdf)
-        feature_importance_df = pd.DataFrame(list(feature_importance.items()), columns=['Feature', 'Importance'])
-        plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
-    except:
-        feature_importance = {}
+    # try:
+        # model_pdf = model.result.to_pandas()['classification_tree']
+    feature_importance = compute_feature_importance(DT_classifier.modelObj,X_test)
+    plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
+    
+    # except:
+    #     feature_importance = {}
 
     predictions_table = "predictions_tmp"
     copy_to_sql(df=predict_DT, table_name=predictions_table, index=False, if_exists="replace", temporary=True)

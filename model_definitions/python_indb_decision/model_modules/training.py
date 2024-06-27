@@ -26,12 +26,16 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Compute feature importance based on tree traversal
 def compute_feature_importance(model,X_train):
+    # from sklearn.inspection import permutation_importance
     feat_dict= {}
     for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
         feat_dict[col]=val
     feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
     # print(feat_df)
     return feat_df
+    # result = permutation_importance(model, X_train, y_train, n_repeats=10, random_state=42, n_jobs=2)
+    # feature_importances = pd.Series(result.importances_mean, index=features)
+    # return feature_importances
 
 def plot_feature_importance(fi, img_filename):
     feat_importances = fi.sort_values(['Importance'],ascending = False).head(10)
@@ -73,7 +77,8 @@ def train(context: ModelContext, **kwargs):
     
          
     print("Starting training using teradata osml...")
-    DT_classifier = osml.DecisionTreeClassifier(random_state=10,max_leaf_nodes=2,max_features='auto',max_depth=2)
+    DT_classifier = osml.DecisionTreeClassifier(random_state=2,max_leaf_nodes=2,max_features='auto',max_depth=2,
+                                               min_samples_split=2, min_samples_leaf=1)
     DT_classifier.fit(X_train, y_train)
     DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
     explainer = LimeTabularExplainer(X_train.get_values(), feature_names=X_train.columns,
@@ -83,19 +88,14 @@ def train(context: ModelContext, **kwargs):
     with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:   
         dill.dump(explainer, f)
         
-#     explainer_shap = shap.TreeExplainer(DT_classifier.modelObj)
-    
-#     #with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:
-#     with open(f"{context.artifact_output_path}/exp_shap_obj", 'wb') as f:   
-#         dill.dump(explainer_shap, f)    
     print("Complete osml training...")
     
     # Calculate feature importance and generate plot
     # model_pdf = model.result.to_pandas()['classification_tree']
     # feature_importance = compute_feature_importance(model_pdf)
-    feature_importance = compute_feature_importance(DT_classifier,X_train)
+    feature_importance = compute_feature_importance(DT_classifier.modelObj,X_train)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
-    
+    # print(DT_classifier.modelObj.feature_importances_)
 
     record_training_stats(
         train_df,

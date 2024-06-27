@@ -1,5 +1,5 @@
 {
-    "id": "00d4839f-784f-405e-8985-2cc6904cfe39",
+    "id": "055f8be2-3774-4407-be51-d7207e83657e",
     "name": "Anomaly Detection using teradataml OpenSource DecisionTreeClassifier",
     "description": "teradataml OpenSource DecisionTreeClassifier for Anomaly Detection in Spot Welding",
     "language": "python"
