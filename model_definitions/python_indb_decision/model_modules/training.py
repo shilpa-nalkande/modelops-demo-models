@@ -1,6 +1,5 @@
 from teradataml import (
     DataFrame,
-    DecisionForest,
     ScaleFit,
     ScaleTransform,
 )
@@ -18,6 +17,7 @@ import numpy as np
 import json
 import dill
 from collections import Counter
+import shap
 import warnings
 warnings.filterwarnings('ignore')
 warnings.simplefilter(action='ignore', category=DeprecationWarning)
@@ -77,10 +77,20 @@ def train(context: ModelContext, **kwargs):
     
          
     print("Starting training using teradata osml...")
-    DT_classifier = osml.DecisionTreeClassifier(random_state=2,max_leaf_nodes=2,max_features='auto',max_depth=2,
-                                               min_samples_split=2, min_samples_leaf=1)
-    DT_classifier.fit(X_train, y_train)
-    DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
+#     DT_classifier = osml.DecisionTreeClassifier(random_state=2,max_leaf_nodes=2,max_features='auto',max_depth=2,
+#                                                min_samples_split=2, min_samples_leaf=1)
+#     DT_classifier.fit(X_train, y_train)
+#     DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
+#     explainer = LimeTabularExplainer(X_train.get_values(), feature_names=X_train.columns,
+#                                             class_names=['Anomaly','NoAnomaly'], verbose=False, mode='classification')
+    
+#     #with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:
+#     with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:   
+#         dill.dump(explainer, f)
+
+    RF_classifier = osml.RandomForestClassifier(n_estimators=10,max_leaf_nodes=2,max_features='auto',max_depth=2)
+    RF_classifier.fit(X_train, y_train)
+    RF_classifier.deploy(model_name="RF_classifier", replace_if_exists=True)
     explainer = LimeTabularExplainer(X_train.get_values(), feature_names=X_train.columns,
                                             class_names=['Anomaly','NoAnomaly'], verbose=False, mode='classification')
     
@@ -88,15 +98,16 @@ def train(context: ModelContext, **kwargs):
     with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:   
         dill.dump(explainer, f)
         
+   
+        
     print("Complete osml training...")
     
     # Calculate feature importance and generate plot
     # model_pdf = model.result.to_pandas()['classification_tree']
     # feature_importance = compute_feature_importance(model_pdf)
-    feature_importance = compute_feature_importance(DT_classifier.modelObj,X_train)
+    feature_importance = compute_feature_importance(RF_classifier.modelObj,X_train)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
-    # print(DT_classifier.modelObj.feature_importances_)
-
+    
     record_training_stats(
         train_df,
         features=feature_names,

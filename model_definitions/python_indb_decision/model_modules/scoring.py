@@ -2,7 +2,6 @@ from teradataml import td_sklearn as osml
 from teradataml import (
     copy_to_sql,
     DataFrame,
-    TDDecisionForestPredict,
     ScaleTransform
 )
 from aoa import (
@@ -59,13 +58,13 @@ def score(context: ModelContext, **kwargs):
       
     # print(predictions_pdf)
     print("Scoring using osml...")
-    DT_classifier = osml.load(model_name="DT_classifier")
-    predict_DT =DT_classifier.predict(X_test)
+    RF_classifier = osml.load(model_name="RF_classifier")
+    predict_df =RF_classifier.predict(X_test)
     # Convert predictions to pandas DataFrame and process
     # predictions_pdf = predict_DT.to_pandas(all_rows=True)
-    df_pred = predict_DT.to_pandas(all_rows=True)
+    df_pred = predict_df.to_pandas(all_rows=True)
     
-    predictions_pdf = predict_DT.to_pandas(all_rows=True).rename(columns={"decisiontreeclassifier_predict_1": target_name})
+    predictions_pdf = predict_df.to_pandas(all_rows=True).rename(columns={"randomforestclassifier_predict_1": target_name})
     print("Finished Scoring")
     # print(predictions_pdf.columns)
    
@@ -84,12 +83,13 @@ def score(context: ModelContext, **kwargs):
         # print("WELDING_ID", welding_id)
         df = df.drop(columns=["WELDING_ID"])
         
-        exp = explainer.explain_instance(df.get_values().flatten(), DT_classifier.modelObj.predict_proba, num_features=9)
+        exp = explainer.explain_instance(df.get_values().flatten(), RF_classifier.modelObj.predict_proba, num_features=9)
         # print("explisttype",type(json.dumps(exp.as_list())), json.dumps(exp.as_list()))
         new_row = pd.DataFrame({"WELDING_ID": welding_id,"json_report":json.dumps(exp.as_list())})
         # print("new_row", new_row)
         pred_df = pd.concat([pred_df, new_row], ignore_index=True, axis=0)
-        # pred_df.append({"json_report":json.dumps(explainer.explain_instance(df.get_values().flatten(), DT_classifier.modelObj.predict_proba, num_features=9).as_list())})
+   
+
     # store the predictions
    
     predictions_pdf = pd.DataFrame(predictions_pdf, columns=[target_name])

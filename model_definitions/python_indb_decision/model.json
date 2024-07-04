@@ -1,6 +1,6 @@
 {
-    "id": "055f8be2-3774-4407-be51-d7207e83657e",
-    "name": "Anomaly Detection using teradataml OpenSource DecisionTreeClassifier",
-    "description": "teradataml OpenSource DecisionTreeClassifier for Anomaly Detection in Spot Welding",
+    "id": "4c1a145b-6eaa-456d-864f-e513ba3c2492",
+    "name": "Anomaly Detection using teradataml OpenSource RandomForestClassifier",
+    "description": "teradataml OpenSource RandomForestClassifier for Anomaly Detection in Spot Welding",
     "language": "python"
 }
