@@ -1,7 +1,7 @@
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 import matplotlib.pyplot as plt
 from teradataml import td_sklearn as osml
-from lime.lime_tabular import LimeTabularExplainer
+# from lime.lime_tabular import LimeTabularExplainer
 from teradataml import(
     DataFrame, 
     copy_to_sql, 
@@ -70,14 +70,7 @@ def plot_confusion_matrix(cf, img_filename):
 def plot_roc_curve(roc_out, img_filename):
     import matplotlib.pyplot as plt
     from sklearn import metrics
-    # auc = roc_out.result.to_pandas().iloc[0,0]
-    # roc_results = roc_out.output_data.to_pandas()
     fpr, tpr, thresholds = metrics.roc_curve(roc_out['anomaly_int'], roc_out['randomforestclassifier_predict_1'])
-    auc = metrics.auc(fpr, tpr)
-    # plt.plot(roc_results['fpr'], roc_results['tpr'], color='darkorange', lw=2, label='ROC curve (AUC = %0.2f)' %auc)
-    # plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    # plt.xlim([0.0, 1.0])
-    # plt.ylim([0.0, 1.05])
     plt.plot(fpr,tpr,label="ROC curve AUC="+str(auc), color='darkorange')
     plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--') 
     plt.xlabel('False Positive Rate')
@@ -94,9 +87,7 @@ def evaluate(context: ModelContext, **kwargs):
 
     aoa_create_context()
 
-    # Load the trained model from SQL
-    # model = DataFrame(f"model_${context.model_version}")
-
+    
     feature_names = context.dataset_info.feature_names
     target_name = context.dataset_info.target_names[0]
     entity_key = context.dataset_info.entity_key
@@ -121,10 +112,10 @@ def evaluate(context: ModelContext, **kwargs):
     accuracy_rf = RF_classifier.score(X_test, y_test)
     df = X_test.sample(n=1)
     df = df.drop(columns="sampleid")
-    with open(f"{context.artifact_input_path}/exp_obj", 'rb') as f:
-        explainer = dill.load(f)
+#     with open(f"{context.artifact_input_path}/exp_obj", 'rb') as f:
+#         explainer = dill.load(f)
        
-    exp = explainer.explain_instance(df.get_values().flatten(), RF_classifier.modelObj.predict_proba, num_features=9)
+#     exp = explainer.explain_instance(df.get_values().flatten(), RF_classifier.modelObj.predict_proba, num_features=9)
     
     explainer_shap = shap.TreeExplainer(RF_classifier.modelObj)
     shap_values = explainer_shap.shap_values(X_test.to_pandas())
@@ -132,8 +123,7 @@ def evaluate(context: ModelContext, **kwargs):
     shap.summary_plot(shap_values, X_test.to_pandas(),show=False, plot_size=(12, 8), plot_type='bar')
     save_plot('SHAP Feature Importance', context=context)
     
-    # X100 = shap.utils.sample(X_test.to_pandas(), 100)  # 100 instances for use as the background distribution
-
+    
     explainer_ebm = shap.Explainer(RF_classifier.modelObj.predict, X_test.to_pandas())
     shap_values_ebm = explainer_ebm(X_test.to_pandas())
     
@@ -184,8 +174,6 @@ def evaluate(context: ModelContext, **kwargs):
     )
     
     plot_roc_curve(predict_df.to_pandas(), f"{context.artifact_output_path}/roc_curve")
-    
-    # exp.save_to_file(f"{context.artifact_output_path}/expimg.html")
     
     feature_importance = compute_feature_importance(RF_classifier.modelObj,X_test)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
