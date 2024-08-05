@@ -37,32 +37,32 @@ def score(context: ModelContext, **kwargs):
         index=False,
         if_exists="replace"
     )
-    X_test = test_df.drop(['WELDING_ID'], axis = 1)
+    X_test = test_df.drop(['PatientId'], axis = 1)
     # y_test = test_df.select(["anomaly_int"])
     features_tdf = DataFrame.from_query(context.dataset_info.sql)
     features_pdf = features_tdf.to_pandas(all_rows=True)
-    test_df.set_index("WELDING_ID")
-    # Scaling the test set
-    print ("Loading scaler...")
-    scaler = DataFrame(f"scaler_${context.model_version}")
+    test_df.set_index("PatientId")
+#     # Scaling the test set
+#     print ("Loading scaler...")
+#     scaler = DataFrame(f"scaler_${context.model_version}")
 
-    # Scale the test dataset using the trained scaler
-    scaled_test = ScaleTransform(
-        data=test_df,
-        object=scaler,
-        accumulate = entity_key
-    )
+#     # Scale the test dataset using the trained scaler
+#     scaled_test = ScaleTransform(
+#         data=test_df,
+#         object=scaler,
+#         accumulate = entity_key
+#     )
     
       
-    # print(predictions_pdf)
+#     # print(predictions_pdf)
     print("Scoring using osml...")
-    RF_classifier = osml.load(model_name="RF_classifier")
-    predict_df =RF_classifier.predict(X_test)
+    DT_classifier = osml.load(model_name="DT_classifier")
+    predict_df =DT_classifier.predict(X_test)
     # Convert predictions to pandas DataFrame and process
     # predictions_pdf = predict_DT.to_pandas(all_rows=True)
     df_pred = predict_df.to_pandas(all_rows=True)
     
-    predictions_pdf = predict_df.to_pandas(all_rows=True).rename(columns={"randomforestclassifier_predict_1": target_name})
+    predictions_pdf = predict_df.to_pandas(all_rows=True).rename(columns={"decisiontreeclassifier_predict_1": target_name})
     print("Finished Scoring")
     # print(predictions_pdf.columns)
    
@@ -81,7 +81,7 @@ def score(context: ModelContext, **kwargs):
 #         # print("WELDING_ID", welding_id)
 #         df = df.drop(columns=["WELDING_ID"])
         
-#         exp = explainer.explain_instance(df.get_values().flatten(), RF_classifier.modelObj.predict_proba, num_features=9)
+#         exp = explainer.explain_instance(df.get_values().flatten(), DT_classifier.modelObj.predict_proba, num_features=9)
 #         # print("explisttype",type(json.dumps(exp.as_list())), json.dumps(exp.as_list()))
 #         new_row = pd.DataFrame({"WELDING_ID": welding_id,"json_report":json.dumps(exp.as_list())})
 #         # print("new_row", new_row)
@@ -92,7 +92,7 @@ def score(context: ModelContext, **kwargs):
    
     predictions_pdf = pd.DataFrame(predictions_pdf, columns=[target_name])
     # predictions_pdf[entity_key] = features_pdf.index.values
-    predictions_pdf[entity_key] = test_df.select(["WELDING_ID"]).get_values()
+    predictions_pdf[entity_key] = test_df.select(["PatientId"]).get_values()
     # add job_id column so we know which execution this is from if appended to predictions table
     # print(predictions_pdf)
     predictions_pdf["job_id"] = context.job_id

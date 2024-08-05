@@ -70,7 +70,7 @@ def plot_confusion_matrix(cf, img_filename):
 def plot_roc_curve(roc_out, img_filename):
     import matplotlib.pyplot as plt
     from sklearn import metrics
-    fpr, tpr, thresholds = metrics.roc_curve(roc_out['anomaly_int'], roc_out['randomforestclassifier_predict_1'])
+    fpr, tpr, thresholds = metrics.roc_curve(roc_out['HasDiabetes'], roc_out['decisiontreeclassifier_predict_1'])
     plt.plot(fpr,tpr,label="ROC curve AUC="+str(auc), color='darkorange')
     plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--') 
     plt.xlabel('False Positive Rate')
@@ -94,8 +94,8 @@ def evaluate(context: ModelContext, **kwargs):
 
     # Load the test data from Teradata
     test_df = DataFrame.from_query(context.dataset_info.sql)
-    X_test = test_df.drop(['anomaly_int','WELDING_ID'], axis = 1)
-    y_test = test_df.select(["anomaly_int"])
+    X_test = test_df.drop(['HasDiabetes','PatientId'], axis = 1)
+    y_test = test_df.select(["HasDiabetes"])
     # Scaling the test set
     print ("Loading scaler...")
     scaler = DataFrame(f"scaler_${context.model_version}")
@@ -107,24 +107,20 @@ def evaluate(context: ModelContext, **kwargs):
     )
     
     print("Evaluating osml...")
-    RF_classifier = osml.load(model_name="RF_classifier")
-    predict_df =RF_classifier.predict(X_test,y_test)
-    accuracy_rf = RF_classifier.score(X_test, y_test)
+    DT_classifier = osml.load(model_name="DT_classifier")
+    predict_df =DT_classifier.predict(X_test,y_test)
+    accuracy_dt = DT_classifier.score(X_test, y_test)
     df = X_test.sample(n=1)
     df = df.drop(columns="sampleid")
-#     with open(f"{context.artifact_input_path}/exp_obj", 'rb') as f:
-#         explainer = dill.load(f)
-       
-#     exp = explainer.explain_instance(df.get_values().flatten(), RF_classifier.modelObj.predict_proba, num_features=9)
-    
-    explainer_shap = shap.TreeExplainer(RF_classifier.modelObj)
+   
+    explainer_shap = shap.TreeExplainer(DT_classifier.modelObj)
     shap_values = explainer_shap.shap_values(X_test.to_pandas())
     
     shap.summary_plot(shap_values, X_test.to_pandas(),show=False, plot_size=(12, 8), plot_type='bar')
     save_plot('SHAP Feature Importance', context=context)
     
     
-    explainer_ebm = shap.Explainer(RF_classifier.modelObj.predict, X_test.to_pandas())
+    explainer_ebm = shap.Explainer(DT_classifier.modelObj.predict, X_test.to_pandas())
     shap_values_ebm = explainer_ebm(X_test.to_pandas())
     
     shap.plots.beeswarm(shap_values_ebm,show=False, plot_size=(12,8))
@@ -134,7 +130,7 @@ def evaluate(context: ModelContext, **kwargs):
     ClassificationEvaluator_obj = ClassificationEvaluator(
         data=predict_df,
         observation_column=target_name,
-        prediction_column='randomforestclassifier_predict_1',
+        prediction_column='decisiontreeclassifier_predict_1',
         num_labels=2
     )
 
@@ -161,13 +157,13 @@ def evaluate(context: ModelContext, **kwargs):
         json.dump(evaluation, f)
         
     # Generate and save confusion matrix plot
-    cm = confusion_matrix(predict_df.to_pandas()['anomaly_int'], predict_df.to_pandas()['randomforestclassifier_predict_1'])
+    cm = confusion_matrix(predict_df.to_pandas()['HasDiabetes'], predict_df.to_pandas()['decisiontreeclassifier_predict_1'])
     plot_confusion_matrix(cm, f"{context.artifact_output_path}/confusion_matrix")
     
     # Generate and save ROC curve plot
     roc_out = ROC(
         data=predict_df,
-        probability_column='randomforestclassifier_predict_1',
+        probability_column='decisiontreeclassifier_predict_1',
         observation_column=target_name,
         positive_class='1',
         num_thresholds=1000
@@ -175,7 +171,7 @@ def evaluate(context: ModelContext, **kwargs):
     
     plot_roc_curve(predict_df.to_pandas(), f"{context.artifact_output_path}/roc_curve")
     
-    feature_importance = compute_feature_importance(RF_classifier.modelObj,X_test)
+    feature_importance = compute_feature_importance(DT_classifier.modelObj,X_test)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
     
     

@@ -4,7 +4,7 @@ from teradataml import (
     ScaleTransform,
 )
 from teradataml import td_sklearn as osml
-# from lime.lime_tabular import LimeTabularExplainer
+
 from aoa import (
     record_training_stats,
     aoa_create_context,
@@ -31,11 +31,9 @@ def compute_feature_importance(model,X_train):
     for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
         feat_dict[col]=val
     feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
-    # print(feat_df)
+    
     return feat_df
-    # result = permutation_importance(model, X_train, y_train, n_repeats=10, random_state=42, n_jobs=2)
-    # feature_importances = pd.Series(result.importances_mean, index=features)
-    # return feature_importances
+    
 
 def plot_feature_importance(fi, img_filename):
     feat_importances = fi.sort_values(['Importance'],ascending = False).head(10)
@@ -56,8 +54,8 @@ def train(context: ModelContext, **kwargs):
     train_df = DataFrame.from_query(context.dataset_info.sql)
 
     print ("Scaling using InDB Functions...")
-    X_train = train_df.drop(['anomaly_int','WELDING_ID'], axis = 1)
-    y_train = train_df.select(["anomaly_int"])
+    X_train = train_df.drop(['HasDiabetes','PatientId'], axis = 1)
+    y_train = train_df.select(["HasDiabetes"])
     # Scale the training data using the ScaleFit and ScaleTransform functions
     scaler = ScaleFit(
         data=train_df,
@@ -78,22 +76,14 @@ def train(context: ModelContext, **kwargs):
          
     print("Starting training using teradata osml...")
 
-    RF_classifier = osml.RandomForestClassifier(n_estimators=10,max_leaf_nodes=2,max_features='auto',max_depth=2)
-    RF_classifier.fit(X_train, y_train)
-    RF_classifier.deploy(model_name="RF_classifier", replace_if_exists=True)
-#     explainer = LimeTabularExplainer(X_train.get_values(), feature_names=X_train.columns,
-#                                             class_names=['Anomaly','NoAnomaly'], verbose=False, mode='classification')
-    
-#     #with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:
-#     with open(f"{context.artifact_output_path}/exp_obj", 'wb') as f:   
-#         dill.dump(explainer, f)
-        
-   
+    DT_classifier = osml.DecisionTreeClassifier(criterion="gini",max_leaf_nodes=2,max_features='auto',max_depth=2)
+    DT_classifier.fit(X_train, y_train)
+    DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
         
     print("Complete osml training...")
     
     # Calculate feature importance and generate plot
-    feature_importance = compute_feature_importance(RF_classifier.modelObj,X_train)
+    feature_importance = compute_feature_importance(DT_classifier.modelObj,X_train)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
     
     record_training_stats(

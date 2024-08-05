@@ -1,7 +1,7 @@
 {
    "hyperParameters": {
     "model_type": "Classification",
-    "scale_method":"RANGE",
+    "scale_method":"STD",
     "miss_value":"KEEP",
     "global_scale": "False",
     "max_depth": 16, 
