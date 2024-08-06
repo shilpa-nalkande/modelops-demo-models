@@ -28,7 +28,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 def compute_feature_importance(model,X_train):
     # from sklearn.inspection import permutation_importance
     feat_dict= {}
-    for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
+    for col, val in sorted(zip(X_train.columns, model.tree_.compute_feature_importances()),key=lambda x:x[1],reverse=True):
         feat_dict[col]=val
     feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
     
@@ -76,7 +76,7 @@ def train(context: ModelContext, **kwargs):
          
     print("Starting training using teradata osml...")
 
-    DT_classifier = osml.DecisionTreeClassifier(criterion="gini",max_leaf_nodes=2,max_features='auto',max_depth=2)
+    DT_classifier = osml.DecisionTreeClassifier(random_state=32,max_leaf_nodes=4,max_features='auto',max_depth=4)
     DT_classifier.fit(X_train, y_train)
     DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
         
