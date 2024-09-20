@@ -1,0 +1,6 @@
+{
+    "id": "4c1a145b-6eaa-456d-864f-e513ba3c2492",
+    "name": "Anomaly Detection using teradataml OpenSource RandomForestClassifier",
+    "description": "teradataml OpenSource RandomForestClassifier for Anomaly Detection in Spot Welding",
+    "language": "python"
+}
