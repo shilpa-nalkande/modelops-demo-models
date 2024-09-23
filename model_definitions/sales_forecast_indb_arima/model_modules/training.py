@@ -24,7 +24,7 @@ import pandas as pd
 import numpy as np
 import json
 from collections import Counter
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+# from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 
 # Compute acf and pacf 
