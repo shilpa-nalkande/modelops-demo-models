@@ -41,7 +41,7 @@ def compute_acf_pacf(data_series_df):
                     max_lags=12,
                     alpha=0.05)
     df_pacf_plot = pacf_out.result
-    return (df_acf_plot, df_pacf_plot)
+    return df_acf_plot, df_pacf_plot
 
 
 def plot_acf_fun(df_acf_plot, img_filename):
@@ -141,8 +141,8 @@ def train(context: ModelContext, **kwargs):
     df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
     # print(df_acf_plot, df_pacf_plot)
     print("Before plots...")
-    
-    
+    df_acf_plot.materialize()
+    df_pacf_plot.materialize()
     plot_acf_fun(df_acf_plot, f"{context.artifact_output_path}/acf_plot")
     plot_pacf_fun(df_pacf_plot, f"{context.artifact_output_path}/pacf_plot")
     # Train the model using ARIMA
