@@ -31,6 +31,7 @@ from collections import Counter
 # Compute acf and pacf 
 def compute_acf_pacf(data_series_df):
     print("inside acf pacf...")
+    print(data_series_df)
     acf_out = ACF(data=data_series_df,
                   max_lags=12,
                   demean=True,
@@ -141,10 +142,11 @@ def train(context: ModelContext, **kwargs):
     
      # Calculate acf, pacf and generate plot
     print("Before acf pacf...")
+    print(data_series_df_1)
     df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
     # print(df_acf_plot, df_pacf_plot)
-    print(df_acf_plot)
-    print(df_pacf_plot)
+    # print(df_acf_plot)
+    # print(df_pacf_plot)
     print("Before plots...")
     copy_to_sql(df=df_acf_plot, table_name='acf_data', if_exists='replace')
     copy_to_sql(df=df_pacf_plot, table_name='pacf_data', if_exists='replace')
