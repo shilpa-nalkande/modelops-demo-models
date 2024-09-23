@@ -47,6 +47,7 @@ def compute_acf_pacf(data_series_df):
 def plot_acf_fun(df_acf_plot, img_filename):
     from teradataml import Figure
     figure = Figure(width=800, height=900, image_type="png", heading="Auto Correlation")
+    print("ACF plots...")
     plot = df_acf_plot.plot(x=df_acf_plot.ROW_I, 
         y=(df_acf_plot.OUT_Weekly_Sales, df_acf_plot.CONF_OFF_Weekly_Sales),
         kind='corr', ylabel = " ", color="blue", figure=figure)
@@ -62,6 +63,9 @@ def plot_acf_fun(df_acf_plot, img_filename):
 #     plt.clf()
         
 def plot_pacf_fun(df_pacf_plot, img_filename):
+    from teradataml import Figure
+    figure = Figure(width=800, height=900, image_type="png", heading="Auto Correlation")
+    print("PACF plots...")
     plot = df_pacf_plot.plot(x=df_pacf_plot.ROW_I, 
         y=(df_pacf_plot.OUT_Weekly_Sales, df_pacf_plot.CONF_OFF_Weekly_Sales),
         kind='corr',figsize=(600,400),ylabel = " ",
