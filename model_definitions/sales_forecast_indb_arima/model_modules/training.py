@@ -127,8 +127,10 @@ def train(context: ModelContext, **kwargs):
                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
                         timecode_duration="WEEKS(1)")
     
-    df1=uaf_out1.result.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=uaf_out1.result.ROW_I)
+    print("After Resample...")
     print(uaf_out1.result)
+    df1=uaf_out1.result.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=uaf_out1.result.ROW_I)
+    
     df1.to_sql('arima_data', if_exists="replace")
     # Check if the series is stationary using DickeyFuller
     print("Before TDSeries...")
