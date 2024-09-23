@@ -130,13 +130,14 @@ def train(context: ModelContext, **kwargs):
     df1.to_sql('arima_data', if_exists="replace")
     # Check if the series is stationary using DickeyFuller
     print("Before TDSeries...")
-    data_series_df_1 = TDSeries(data=df1,
+    data_series_df_1 = TDSeries(data=DataFrame('arima_data'),
                               id="Sales_Date",
                               row_index=("idcols"),
                               row_index_style= "SEQUENCE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
-    print(data_series_df_1)
+    data_series_df_1.to_sql('series_data_1', if_exists="replace")
+    print(DataFrame('series_data_1'))
     print("Before DickeyFuller...")
     df_out = DickeyFuller(   data=data_series_df_1,
                            algorithm='NONE')
