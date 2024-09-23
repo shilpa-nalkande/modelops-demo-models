@@ -122,6 +122,7 @@ def train(context: ModelContext, **kwargs):
                               payload_content="REAL")
     
     print("Before Resample...")
+    print(data_series_df)
     uaf_out1 = Resample(data=data_series_df,
                         interpolate='LINEAR',
                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
