@@ -109,7 +109,7 @@ def train(context: ModelContext, **kwargs):
                               row_index_style= "TIMECODE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
-    
+    print("Before Resample...")
     uaf_out1 = Resample(data=data_series_df,
                         interpolate='LINEAR',
                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
@@ -118,12 +118,14 @@ def train(context: ModelContext, **kwargs):
     df1=uaf_out1.result.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=uaf_out1.result.ROW_I)
     df1.to_sql('arima_data', if_exists="replace")
     # Check if the series is stationary using DickeyFuller
+    print("Before TDSeries...")
     data_series_df_1 = TDSeries(data=df1,
                               id="Sales_Date",
                               row_index=("idcols"),
                               row_index_style= "SEQUENCE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
+    print("Before DickeyFuller...")
     df_out = DickeyFuller(   data=data_series_df_1,
                            algorithm='NONE')
     
@@ -134,6 +136,7 @@ def train(context: ModelContext, **kwargs):
     plot_pacf_fun(df_pacf_plot, f"{context.artifact_output_path}/pacf_plot")
     # Train the model using ARIMA
     try:
+        print("Before Arimaestimate...")
         arima_est_out = ArimaEstimate(data1=data_series_df_1,
                                 nonseasonal_model_order=[context.hyperparams["p"],context.hyperparams["d"],context.hyperparams["q"]],
                                 constant=False,
@@ -145,6 +148,7 @@ def train(context: ModelContext, **kwargs):
                                 output_table_name='arima_est_tb',     
                                 fit_percentage=80)
     except:
+        print("Before Arimaestimate...")
         db_drop_table('arima_est_tb')
         arima_est_out = ArimaEstimate(data1=data_series_df_1,
                                 nonseasonal_model_order=[context.hyperparams["p"],context.hyperparams["d"],context.hyperparams["q"]],
