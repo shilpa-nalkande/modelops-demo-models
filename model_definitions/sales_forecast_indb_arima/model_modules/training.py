@@ -109,7 +109,7 @@ def train(context: ModelContext, **kwargs):
     outlier_obj = OutlierFilterTransform(data=train_df,
                                  object=OutlierFilterFit_out.result)
     out_transform_df = outlier_obj.result
-    
+    print(outlier_obj.result)
     OutlierFilterFit_out.result.to_sql(f"outlier_${context.model_version}", if_exists="replace")
     print("Saved Outliers")
     
