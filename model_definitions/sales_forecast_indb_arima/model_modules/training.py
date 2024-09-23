@@ -8,6 +8,7 @@ from teradataml import (
     OutlierFilterTransform,
     Resample,
     DickeyFuller,
+    copy_to_sql,
     ACF,PACF, TDSeries, db_drop_table
     
     
@@ -44,10 +45,11 @@ def compute_acf_pacf(data_series_df):
     return df_acf_plot, df_pacf_plot
 
 
-def plot_acf_fun(df_acf_plot, img_filename):
+def plot_acf_fun(img_filename):
     from teradataml import Figure
     figure = Figure(width=800, height=900, image_type="png", heading="Auto Correlation")
     print("ACF plots...")
+    df_acf_plot=DataFrame('acf_data')
     print(df_acf_plot)
     plot = df_acf_plot.plot(x=df_acf_plot.ROW_I, 
         y=(df_acf_plot.OUT_Weekly_Sales, df_acf_plot.CONF_OFF_Weekly_Sales),
@@ -63,10 +65,11 @@ def plot_acf_fun(df_acf_plot, img_filename):
 #     plt.savefig(img_filename, dpi=500)
 #     plt.clf()
         
-def plot_pacf_fun(df_pacf_plot, img_filename):
+def plot_pacf_fun(img_filename):
     from teradataml import Figure
     figure = Figure(width=800, height=900, image_type="png", heading="Auto Correlation")
     print("PACF plots...")
+    df_pacf_plot=DataFrame('pacf_data')
     print(df_pacf_plot)
     plot = df_pacf_plot.plot(x=df_pacf_plot.ROW_I, 
         y=(df_pacf_plot.OUT_Weekly_Sales, df_pacf_plot.CONF_OFF_Weekly_Sales),
@@ -141,10 +144,11 @@ def train(context: ModelContext, **kwargs):
     df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
     # print(df_acf_plot, df_pacf_plot)
     print("Before plots...")
-    df_acf_plot.materialize()
-    df_pacf_plot.materialize()
-    plot_acf_fun(df_acf_plot, f"{context.artifact_output_path}/acf_plot")
-    plot_pacf_fun(df_pacf_plot, f"{context.artifact_output_path}/pacf_plot")
+    copy_to_sql(df=df_acf_plot, table_name='acf_data', if_exists='replace')
+    copy_to_sql(df=df_pacf_plot, table_name='pacf_data', if_exists='replace')
+    
+    plot_acf_fun(f"{context.artifact_output_path}/acf_plot")
+    plot_pacf_fun(f"{context.artifact_output_path}/pacf_plot")
     # Train the model using ARIMA
     try:
         print("Before Arimaestimate...")
