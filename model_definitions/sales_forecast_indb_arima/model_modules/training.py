@@ -123,14 +123,14 @@ def train(context: ModelContext, **kwargs):
     
     print("Before Resample...")
     print(data_series_df)
-    data_series_df.to_sql('series_data', if_exists='replace')
-    uaf_out1 = Resample(data=DataFrame('series_data'),
+    # data_series_df.to_sql('series_data', if_exists='replace')
+    uaf_out1 = Resample(data=data_series_df,
                         interpolate='LINEAR',
                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
                         timecode_duration="WEEKS(1)")
-    
-    print("After Resample...")
     print(uaf_out1.result)
+    print("After Resample...")
+   
     df1=uaf_out1.result.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=uaf_out1.result.ROW_I)
     
     df1.to_sql('arima_data', if_exists="replace")
