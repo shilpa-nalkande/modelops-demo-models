@@ -136,13 +136,15 @@ def train(context: ModelContext, **kwargs):
                               row_index_style= "SEQUENCE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
+    print(data_series_df_1)
     print("Before DickeyFuller...")
     df_out = DickeyFuller(   data=data_series_df_1,
                            algorithm='NONE')
     
+    print(df_out)
      # Calculate acf, pacf and generate plot
     print("Before acf pacf...")
-    print(data_series_df_1)
+    
     df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
     # print(df_acf_plot, df_pacf_plot)
     # print(df_acf_plot)
