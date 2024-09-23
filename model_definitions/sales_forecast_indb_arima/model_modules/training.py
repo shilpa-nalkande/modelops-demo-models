@@ -123,7 +123,8 @@ def train(context: ModelContext, **kwargs):
     
     print("Before Resample...")
     print(data_series_df)
-    uaf_out1 = Resample(data=data_series_df,
+    data_series_df.to_sql('series_data', if_exists='replace')
+    uaf_out1 = Resample(data=DataFrame('series_data'),
                         interpolate='LINEAR',
                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
                         timecode_duration="WEEKS(1)")
