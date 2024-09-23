@@ -143,6 +143,8 @@ def train(context: ModelContext, **kwargs):
     print("Before acf pacf...")
     df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
     # print(df_acf_plot, df_pacf_plot)
+    print(df_acf_plot)
+    print(df_pacf_plot)
     print("Before plots...")
     copy_to_sql(df=df_acf_plot, table_name='acf_data', if_exists='replace')
     copy_to_sql(df=df_pacf_plot, table_name='pacf_data', if_exists='replace')
