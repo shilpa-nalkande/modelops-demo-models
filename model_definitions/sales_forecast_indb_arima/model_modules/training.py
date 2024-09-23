@@ -109,7 +109,7 @@ def train(context: ModelContext, **kwargs):
     outlier_obj = OutlierFilterTransform(data=train_df,
                                  object=OutlierFilterFit_out.result)
     out_transform_df = outlier_obj.result
-    print(outlier_obj.result)
+    
     OutlierFilterFit_out.result.to_sql(f"outlier_${context.model_version}", if_exists="replace")
     print("Saved Outliers")
     
@@ -120,6 +120,7 @@ def train(context: ModelContext, **kwargs):
                               row_index_style= "TIMECODE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
+    print(data_series_df)
     print("Before Resample...")
     uaf_out1 = Resample(data=data_series_df,
                         interpolate='LINEAR',
