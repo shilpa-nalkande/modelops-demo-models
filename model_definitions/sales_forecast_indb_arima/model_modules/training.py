@@ -29,6 +29,7 @@ from collections import Counter
 
 # Compute acf and pacf 
 def compute_acf_pacf(data_series_df):
+    print("inside acf pacf...")
     acf_out = ACF(data=data_series_df,
                   max_lags=12,
                   demean=True,
@@ -130,8 +131,10 @@ def train(context: ModelContext, **kwargs):
                            algorithm='NONE')
     
      # Calculate acf, pacf and generate plot
+    print("Before acf pacf...")
     df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
     # print(df_acf_plot, df_pacf_plot)
+    print("Before plots...")
     plot_acf_fun(df_acf_plot, f"{context.artifact_output_path}/acf_plot")
     plot_pacf_fun(df_pacf_plot, f"{context.artifact_output_path}/pacf_plot")
     # Train the model using ARIMA
