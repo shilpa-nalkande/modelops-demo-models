@@ -42,7 +42,7 @@ def score(context: ModelContext, **kwargs):
     print("Forecasting...")
     # Make forecast using ArimaForecast function
     arima_estimate_op = ArimaEstimate(data1=data_series_df_1,
-                                      nonseasonal_model_order=[2,1,1],
+                                      nonseasonal_model_order=[context.hyperparams["p"],context.hyperparams["d"],context.hyperparams["q"]],
                                       constant=False,
                                       algorithm="MLE",
                                       coeff_stats=True,
