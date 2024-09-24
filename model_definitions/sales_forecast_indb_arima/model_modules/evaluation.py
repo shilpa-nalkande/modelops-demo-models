@@ -56,6 +56,33 @@ def evaluate(context: ModelContext, **kwargs):
     
     arima_val_out = ArimaValidate(data=data_art_df, fit_metrics=True, residuals=True)
     plot_sales(arima_val_out, f"{context.artifact_output_path}/actual_cal_sales")
+    
+    
+    
+    # Extract and store evaluation metrics
+    metrics_pd = arima_val_out.result
+    # print(metrics_pd)
+    metrics_pd = metrics_pd.select(['AIC','SBIC','HQIC','MLR','MSE']).avg()
+    
+    # print(arima_val_out.result)
+    # print(arima_val_out.fitmetadata)
+    # print(arima_val_out.fitresiduals)
+    # print(arima_val_out.model)
+    print(metrics_pd)
+    print(metrics_pd.select('avg_AIC').get_values()[0])
+
+    evaluation = {
+        'AIC': '{:.8f}'.format(metrics_pd.select('avg_AIC').get_values()[0][0]),
+        'SBIC': '{:.8f}'.format(metrics_pd.select('avg_SBIC').get_values()[0][0]),
+        'HQIC': '{:.8f}'.format(metrics_pd.select('avg_HQIC').get_values()[0][0]),
+        'MLR': '{:.8f}'.format(metrics_pd.select('avg_MLR').get_values()[0][0]),
+        'MSE': '{:.2f}'.format(metrics_pd.select('avg_MSE').get_values()[0][0])
+        
+    }
+
+     # Save evaluation metrics to a JSON file
+    with open(f"{context.artifact_output_path}/metrics.json", "w+") as f:
+        json.dump(evaluation, f)
 
 #     # calculate stats if training stats exist
 #     if os.path.exists(f"{context.artifact_input_path}/data_stats.json"):
