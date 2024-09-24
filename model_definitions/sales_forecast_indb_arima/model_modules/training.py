@@ -195,7 +195,7 @@ def train(context: ModelContext, **kwargs):
     try:
         print("Before Arimaestimate...")
         arima_est_out = ArimaEstimate(data1=data_series_df_1,
-                                nonseasonal_model_order=[context.hyperparams["p"],context.hyperparams["d"],context.hyperparams["q"]],
+                                nonseasonal_model_order=[int(context.hyperparams["p"]),int(context.hyperparams["d"]),int(context.hyperparams["q"])],
                                 constant=False,
                                 algorithm="MLE",
                                 coeff_stats=True,
@@ -208,7 +208,7 @@ def train(context: ModelContext, **kwargs):
         print("Before Arimaestimate...")
         db_drop_table('arima_est_tb')
         arima_est_out = ArimaEstimate(data1=data_series_df_1,
-                                nonseasonal_model_order=[context.hyperparams["p"],context.hyperparams["d"],context.hyperparams["q"]],
+                                nonseasonal_model_order=[int(context.hyperparams["p"]),int(context.hyperparams["d"]),int(context.hyperparams["q"])],
                                 constant=False,
                                 algorithm="MLE",
                                 coeff_stats=True,
