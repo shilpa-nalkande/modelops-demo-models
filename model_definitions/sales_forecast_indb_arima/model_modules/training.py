@@ -131,40 +131,41 @@ def train(context: ModelContext, **kwargs):
 #                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
 #                         timecode_duration="WEEKS(1)")
 #     print(uaf_out1.result)
-    qry='''EXECUTE FUNCTION INTO ART(resample_art)
-            TD_RESAMPLE
-            (
-                SERIES_SPEC(
-                    TABLE_NAME(outlier_data),
-                    SERIES_ID(idcols),
-                    ROW_AXIS(TIMECODE(Sales_Date)),
-                    PAYLOAD(
-                        FIELDS(Weekly_Sales),
-                        CONTENT(REAL)
-                    )
-                ),
-                FUNC_PARAMS(
-                    TIMECODE(
-                        START_VALUE(TIMESTAMP '2010-02-05 00:00:00'), 
-                        DURATION(WEEKS(1))
-                    ),
-                    INTERPOLATE(LINEAR)
-                )
-            );'''
-    try:
-        execute_sql(qry)
-    except:
-        db_drop_table('resample_art')
-        execute_sql(qry)
-    print("After Resample...")
+#     qry='''EXECUTE FUNCTION INTO ART(resample_art)
+#             TD_RESAMPLE
+#             (
+#                 SERIES_SPEC(
+#                     TABLE_NAME(outlier_data),
+#                     SERIES_ID(idcols),
+#                     ROW_AXIS(TIMECODE(Sales_Date)),
+#                     PAYLOAD(
+#                         FIELDS(Weekly_Sales),
+#                         CONTENT(REAL)
+#                     )
+#                 ),
+#                 FUNC_PARAMS(
+#                     TIMECODE(
+#                         START_VALUE(TIMESTAMP '2010-02-05 00:00:00'), 
+#                         DURATION(WEEKS(1))
+#                     ),
+#                     INTERPOLATE(LINEAR)
+#                 )
+#             );'''
+#     try:
+#         execute_sql(qry)
+#     except:
+#         db_drop_table('resample_art')
+#         execute_sql(qry)
+#     print("After Resample...")
    
-    df1=DataFrame('resample_art')
-    df1=df1.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=df1.ROW_I)
-    print(df1)
-    df1.to_sql('arima_data', if_exists="replace")
+#     df1=DataFrame('resample_art')
+#     df1=df1.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=df1.ROW_I)
+#     print(df1)
+#     df1.to_sql('arima_data', if_exists="replace")
+    outlier_obj.result.to_sql('arima_data', if_exists="replace")
     # Check if the series is stationary using DickeyFuller
     print("Before TDSeries...")
-    data_series_df_1 = TDSeries(data=DataFrame('arima_data'),
+    data_series_df_1 = TDSeries(data=outlier_obj.result,
                               id="Sales_Date",
                               row_index=("idcols"),
                               row_index_style= "SEQUENCE",
