@@ -131,7 +131,7 @@ def train(context: ModelContext, **kwargs):
 #                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
 #                         timecode_duration="WEEKS(1)")
 #     print(uaf_out1.result)
-    qry='''EXECUTE FUNCTION INTO VOLATILE ART(resample_art)
+    qry='''EXECUTE FUNCTION INTO ART(resample_art)
             TD_RESAMPLE
             (
                 SERIES_SPEC(
@@ -151,8 +151,11 @@ def train(context: ModelContext, **kwargs):
                     INTERPOLATE(LINEAR)
                 )
             );'''
-    
-    execute_sql(qry)
+    try:
+        execute_sql(qry)
+    except:
+        db_drop_table('resample_art')
+        execute_sql(qry)
     print("After Resample...")
    
     df1=DataFrame('resample_art')
