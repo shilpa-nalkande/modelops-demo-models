@@ -9,6 +9,7 @@ from teradataml import (
     Resample,
     DickeyFuller,
     copy_to_sql,
+    execute_sql,
     ACF,PACF, TDSeries, db_drop_table
     
     
@@ -111,28 +112,52 @@ def train(context: ModelContext, **kwargs):
     out_transform_df = outlier_obj.result
     
     OutlierFilterFit_out.result.to_sql(f"outlier_${context.model_version}", if_exists="replace")
+    outlier_obj.result.to_sql('outlier_data', if_exists="replace")
     print("Saved Outliers")
     
     print("Starting training...")
-    data_series_df = TDSeries(data=outlier_obj.result,
-                              id="idcols",
-                              row_index=("Sales_Date"),
-                              row_index_style= "TIMECODE",
-                              payload_field="Weekly_Sales",
-                              payload_content="REAL")
+#     data_series_df = TDSeries(data=outlier_obj.result,
+#                               id="idcols",
+#                               row_index=("Sales_Date"),
+#                               row_index_style= "TIMECODE",
+#                               payload_field="Weekly_Sales",
+#                               payload_content="REAL")
     
-    print("Before Resample...")
-    print(data_series_df)
-    # data_series_df.to_sql('series_data', if_exists='replace')
-    uaf_out1 = Resample(data=data_series_df,
-                        interpolate='LINEAR',
-                        timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
-                        timecode_duration="WEEKS(1)")
-    print(uaf_out1.result)
+#     print("Before Resample...")
+#     print(data_series_df)
+#     # data_series_df.to_sql('series_data', if_exists='replace')
+#     uaf_out1 = Resample(data=data_series_df,
+#                         interpolate='LINEAR',
+#                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
+#                         timecode_duration="WEEKS(1)")
+#     print(uaf_out1.result)
+    qry='''EXECUTE FUNCTION INTO VOLATILE ART(resample_art)
+            TD_RESAMPLE
+            (
+                SERIES_SPEC(
+                    TABLE_NAME(outlier_data),
+                    SERIES_ID(idcols),
+                    ROW_AXIS(TIMECODE(Sales_Date)),
+                    PAYLOAD(
+                        FIELDS(Weekly_Sales),
+                        CONTENT(REAL)
+                    )
+                ),
+                FUNC_PARAMS(
+                    TIMECODE(
+                        START_VALUE(TIMESTAMP '2010-02-05 00:00:00'), 
+                        DURATION(WEEKS(1))
+                    ),
+                    INTERPOLATE(LINEAR)
+                )
+            );'''
+    
+    execute_sql(qry)
     print("After Resample...")
    
-    df1=uaf_out1.result.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=uaf_out1.result.ROW_I)
-    
+    df1=DataFrame('resample_art')
+    df1=df1.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=df1.ROW_I)
+    print(df1)
     df1.to_sql('arima_data', if_exists="replace")
     # Check if the series is stationary using DickeyFuller
     print("Before TDSeries...")
