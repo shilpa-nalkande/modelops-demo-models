@@ -10,6 +10,7 @@ from teradataml import (
     DickeyFuller,
     copy_to_sql,
     execute_sql,
+    SeasonalNormalize,
     ACF,PACF, TDSeries, db_drop_table
     
     
@@ -101,87 +102,59 @@ def train(context: ModelContext, **kwargs):
     # Load the training data from Teradata
     train_df = DataFrame.from_query(context.dataset_info.sql)
 
-    print ("Outliers using InDB Functions...")
+    print ("Make series stationary using seasonalnormalize...")
     
     # Get the outliers training data using the OutlierFilterFit and Transform functions
-    OutlierFilterFit_out = OutlierFilterFit(data = train_df,
-                                            target_columns = "Weekly_Sales",
-                                               )
-    outlier_obj = OutlierFilterTransform(data=train_df,
-                                 object=OutlierFilterFit_out.result)
-    out_transform_df = outlier_obj.result
-    
-    OutlierFilterFit_out.result.to_sql(f"outlier_${context.model_version}", if_exists="replace")
-    outlier_obj.result.to_sql('outlier_data', if_exists="replace")
-    print("Saved Outliers")
-    
-    print("Starting training...")
-#     data_series_df = TDSeries(data=outlier_obj.result,
-#                               id="idcols",
-#                               row_index=("Sales_Date"),
-#                               row_index_style= "TIMECODE",
-#                               payload_field="Weekly_Sales",
-#                               payload_content="REAL")
-    
-#     print("Before Resample...")
-#     print(data_series_df)
-#     # data_series_df.to_sql('series_data', if_exists='replace')
-#     uaf_out1 = Resample(data=data_series_df,
-#                         interpolate='LINEAR',
-#                         timecode_start_value="TIMESTAMP '2010-02-05 00:00:00'",
-#                         timecode_duration="WEEKS(1)")
-#     print(uaf_out1.result)
-#     qry='''EXECUTE FUNCTION INTO ART(resample_art)
-#             TD_RESAMPLE
-#             (
-#                 SERIES_SPEC(
-#                     TABLE_NAME(outlier_data),
-#                     SERIES_ID(idcols),
-#                     ROW_AXIS(TIMECODE(Sales_Date)),
-#                     PAYLOAD(
-#                         FIELDS(Weekly_Sales),
-#                         CONTENT(REAL)
-#                     )
-#                 ),
-#                 FUNC_PARAMS(
-#                     TIMECODE(
-#                         START_VALUE(TIMESTAMP '2010-02-05 00:00:00'), 
-#                         DURATION(WEEKS(1))
-#                     ),
-#                     INTERPOLATE(LINEAR)
-#                 )
-#             );'''
-#     try:
-#         execute_sql(qry)
-#     except:
-#         db_drop_table('resample_art')
-#         execute_sql(qry)
-#     print("After Resample...")
-   
-#     df1=DataFrame('resample_art')
-#     df1=df1.select(['idcols','ROW_I', 'Weekly_Sales']).assign(Sales_Date=df1.ROW_I)
-#     print(df1)
-#     df1.to_sql('arima_data', if_exists="replace")
-    outlier_obj.result.to_sql('arima_data', if_exists="replace")
-    # Check if the series is stationary using DickeyFuller
-    print("Before TDSeries...")
-    data_series_df_1 = TDSeries(data=outlier_obj.result,
-                              id="Sales_Date",
-                              row_index=("idcols"),
-                              row_index_style= "SEQUENCE",
+    from teradataml import DickeyFuller
+    data_series_df_1 = TDSeries(data=train_df,
+                              id="idcols",
+                              row_index=("Sales_Date"),
+                              row_index_style= "TIMECODE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
-    data_series_df_1.to_sql('series_data_1', if_exists="replace")
-    print(DataFrame('series_data_1'))
-    print("Before DickeyFuller...")
+    
     df_out = DickeyFuller(   data=data_series_df_1,
                            algorithm='NONE')
     
-    print(df_out)
+    data_series_df_norm = TDSeries(data=train_df,
+                              id="idcols",
+                              row_index="Sales_Date",
+                              row_index_style="TIMECODE",
+                              payload_field="Weekly_Sales",
+                              payload_content="REAL",
+                              interval="WEEKS(1)")
+    
+    uaf_out = SeasonalNormalize(data=data_series_df_norm,
+                                season_cycle="WEEKS",
+                                cycle_duration=1,
+                                output_fmt_index_style = 'FLOW_THROUGH')
+    
+    uaf_out.result.to_sql('normalize_data', if_exists="replace")
+    uaf_out.metadata.to_sql('normalize_metadata', if_exists="replace")
+    # outlier_obj.result.to_sql('outlier_data', if_exists="replace")
+    print("Saved normalized series")
+    
+    
+        
+    print("Starting training...")
+    print("Before TDSeries...")
+    data_series_df_2 = TDSeries(data=uaf_out.result,
+                              id="idcols",
+                              row_index=("ROW_I"),
+                              row_index_style= "TIMECODE",
+                              payload_field="Weekly_Sales",
+                              payload_content="REAL")
+    
+  
+    print("Before DickeyFuller...")
+    df_out_norm = DickeyFuller(data=data_series_df_2,
+                           algorithm='NONE')
+    
+    print(df_out_norm)
      # Calculate acf, pacf and generate plot
     print("Before acf pacf...")
     
-    df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_1)
+    df_acf_plot, df_pacf_plot = compute_acf_pacf(data_series_df_2)
     # print(df_acf_plot, df_pacf_plot)
     # print(df_acf_plot)
     # print(df_pacf_plot)
@@ -194,7 +167,7 @@ def train(context: ModelContext, **kwargs):
     # Train the model using ARIMA
     try:
         print("Before Arimaestimate...")
-        arima_est_out = ArimaEstimate(data1=data_series_df_1,
+        arima_est_out = ArimaEstimate(data1=data_series_df_2,
                                 nonseasonal_model_order=[int(context.hyperparams["p"]),int(context.hyperparams["d"]),int(context.hyperparams["q"])],
                                 constant=False,
                                 algorithm="MLE",
@@ -203,11 +176,12 @@ def train(context: ModelContext, **kwargs):
                                 residuals=True,
                                 persist=True,
                                 output_table_name='arima_est_tb',     
-                                fit_percentage=80)
+                                fit_percentage=80,
+                                output_fmt_index_style="FLOW_THROUGH")
     except:
         print("Before Arimaestimate...")
         db_drop_table('arima_est_tb')
-        arima_est_out = ArimaEstimate(data1=data_series_df_1,
+        arima_est_out = ArimaEstimate(data1=data_series_df_2,
                                 nonseasonal_model_order=[int(context.hyperparams["p"]),int(context.hyperparams["d"]),int(context.hyperparams["q"])],
                                 constant=False,
                                 algorithm="MLE",
@@ -216,11 +190,12 @@ def train(context: ModelContext, **kwargs):
                                 residuals=True,
                                 persist=True,
                                 output_table_name='arima_est_tb',     
-                                fit_percentage=80)
+                                fit_percentage=80,
+                                output_fmt_index_style="FLOW_THROUGH")
         
     # data_art_df = TDAnalyticResult(data=arima_est_out.result)
     # Save the trained model to SQL
-    # arima_est_out.result.to_sql(table_name='arima_est', if_exists="replace")  
+    # arima_est_out.result.to_sql(table_name='arima_data', if_exists="replace")  
     print("Saved trained model")
 
     # Calculate feature importance and generate plot

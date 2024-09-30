@@ -27,11 +27,12 @@ import os
 def plot_sales(arima_val_out, img_filename):
     from teradataml import Figure
     val_result=arima_val_out.fitresiduals
-    val_result = val_result.groupby('Sales_Date').avg()
-    figure = Figure(width=1000, height=700, heading="Comparison of Actua vs Predicted")
-    plot = val_result.plot(x=val_result.Sales_Date, y=[val_result.avg_ACTUAL_VALUE, val_result.avg_CALC_VALUE], 
+    # val_result = val_result.groupby('ROW_I').avg()
+    figure = Figure(width=1000, height=700, heading="Comparison of Actual vs Predicted")
+    plot = val_result.plot(x=val_result.ROW_I, y=[val_result.ACTUAL_VALUE, val_result.CALC_VALUE], 
              style=['dark orange', 'green'], xlabel='Sales Date', ylabel='Sales',  grid_color='black',
-                   grid_linewidth=0.5, grid_linestyle="-", legend=['Actual Value','Predicted Value'],figure=figure)
+            xtick_format='YYYY-MM',grid_linewidth=0.5, grid_linestyle="-", legend=['Actual Value','Predicted Value'],
+                           figure=figure)
     plot.save(img_filename)
 
 
@@ -43,7 +44,7 @@ def evaluate(context: ModelContext, **kwargs):
     # Load the ArimaEstima
     # arima_est_out = DataFrame(f"model_${context.model_version}")
     arima_est_out = DataFrame('arima_est_tb')
-
+    print(arima_est_out)
     feature_names = context.dataset_info.feature_names
     target_name = context.dataset_info.target_names[0]
     entity_key = context.dataset_info.entity_key
@@ -54,7 +55,9 @@ def evaluate(context: ModelContext, **kwargs):
     
     data_art_df = TDAnalyticResult(data=arima_est_out)
     
-    arima_val_out = ArimaValidate(data=data_art_df, fit_metrics=True, residuals=True)
+    arima_val_out = ArimaValidate(data=data_art_df, fit_metrics=True, residuals=True, 
+                                output_fmt_index_style="FLOW_THROUGH")
+    print(arima_val_out.fitresiduals)
     plot_sales(arima_val_out, f"{context.artifact_output_path}/actual_cal_sales")
     
     
