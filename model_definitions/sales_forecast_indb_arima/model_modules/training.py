@@ -112,7 +112,7 @@ def train(context: ModelContext, **kwargs):
                               row_index_style= "TIMECODE",
                               payload_field="Weekly_Sales",
                               payload_content="REAL")
-    
+    print ("Before DickeyFuller...")
     df_out = DickeyFuller(   data=data_series_df_1,
                            algorithm='NONE')
     
@@ -124,11 +124,12 @@ def train(context: ModelContext, **kwargs):
                               payload_content="REAL",
                               interval="WEEKS(1)")
     
+    print ("Before seasonalnormalize...")
     uaf_out = SeasonalNormalize(data=data_series_df_norm,
                                 season_cycle="WEEKS",
                                 cycle_duration=1,
                                 output_fmt_index_style = 'FLOW_THROUGH')
-    
+    print ("After seasonalnormalize...")
     uaf_out.result.to_sql('normalize_data', if_exists="replace")
     uaf_out.metadata.to_sql('normalize_metadata', if_exists="replace")
     # outlier_obj.result.to_sql('outlier_data', if_exists="replace")
@@ -146,7 +147,7 @@ def train(context: ModelContext, **kwargs):
                               payload_content="REAL")
     
   
-    print("Before DickeyFuller...")
+    print("Before 2nd DickeyFuller...")
     df_out_norm = DickeyFuller(data=data_series_df_2,
                            algorithm='NONE')
     
