@@ -168,6 +168,7 @@ def train(context: ModelContext, **kwargs):
     # Train the model using ARIMA
     try:
         print("Before Arimaestimate...")
+        print(data_series_df_2)
         arima_est_out = ArimaEstimate(data1=data_series_df_2,
                                 nonseasonal_model_order=[int(context.hyperparams["p"]),int(context.hyperparams["d"]),int(context.hyperparams["q"])],
                                 constant=False,
@@ -181,6 +182,7 @@ def train(context: ModelContext, **kwargs):
                                 output_fmt_index_style="FLOW_THROUGH")
     except:
         print("Before Arimaestimate...")
+        print(data_series_df_2)
         db_drop_table('arima_est_tb')
         arima_est_out = ArimaEstimate(data1=data_series_df_2,
                                 nonseasonal_model_order=[int(context.hyperparams["p"]),int(context.hyperparams["d"]),int(context.hyperparams["q"])],
