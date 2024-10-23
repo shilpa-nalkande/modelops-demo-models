@@ -76,7 +76,10 @@ def train(context: ModelContext, **kwargs):
          
     print("Starting training using teradata osml...")
 
-    DT_classifier = osml.DecisionTreeClassifier(random_state=32,max_leaf_nodes=4,max_features='auto',max_depth=4)
+    DT_classifier = osml.DecisionTreeClassifier(random_state=context.hyperparams["random_state"]
+                                                ,max_leaf_nodes=context.hyperparams["max_leaf_nodes"]
+                                                ,max_features=context.hyperparams["max_features"]
+                                                ,max_depth=context.hyperparams["max_depth"])
     DT_classifier.fit(X_train, y_train)
     DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
         

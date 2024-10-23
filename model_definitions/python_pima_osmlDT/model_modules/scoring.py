@@ -42,19 +42,7 @@ def score(context: ModelContext, **kwargs):
     features_tdf = DataFrame.from_query(context.dataset_info.sql)
     features_pdf = features_tdf.to_pandas(all_rows=True)
     test_df.set_index("PatientId")
-#     # Scaling the test set
-#     print ("Loading scaler...")
-#     scaler = DataFrame(f"scaler_${context.model_version}")
 
-#     # Scale the test dataset using the trained scaler
-#     scaled_test = ScaleTransform(
-#         data=test_df,
-#         object=scaler,
-#         accumulate = entity_key
-#     )
-    
-      
-#     # print(predictions_pdf)
     print("Scoring using osml...")
     DT_classifier = osml.load(model_name="DT_classifier")
     predict_df =DT_classifier.predict(X_test)
@@ -64,29 +52,6 @@ def score(context: ModelContext, **kwargs):
     
     predictions_pdf = predict_df.to_pandas(all_rows=True).rename(columns={"decisiontreeclassifier_predict_1": target_name})
     print("Finished Scoring")
-    # print(predictions_pdf.columns)
-   
-     # with open(f"{context.artifact_input_path}/exp_obj", 'rb') as f:
-#         explainer = dill.load(f)
-#     pred_df = pd.DataFrame(columns=["WELDING_ID","json_report"])
-#     convert_dict = {'WELDING_ID': int,
-#                 'json_report': str
-#                 }
- 
-#     pred_df = pred_df.astype(convert_dict)
-#     print("Starting prediction explainer for all rows...")
-#     for i in range(len(test_df.to_pandas())):
-#         df = test_df.iloc[i, :]
-#         welding_id = df.select(["WELDING_ID"]).get_values().flatten()
-#         # print("WELDING_ID", welding_id)
-#         df = df.drop(columns=["WELDING_ID"])
-        
-#         exp = explainer.explain_instance(df.get_values().flatten(), DT_classifier.modelObj.predict_proba, num_features=9)
-#         # print("explisttype",type(json.dumps(exp.as_list())), json.dumps(exp.as_list()))
-#         new_row = pd.DataFrame({"WELDING_ID": welding_id,"json_report":json.dumps(exp.as_list())})
-#         # print("new_row", new_row)
-#         pred_df = pd.concat([pred_df, new_row], ignore_index=True, axis=0)
-   
 
     # store the predictions
    
@@ -96,18 +61,6 @@ def score(context: ModelContext, **kwargs):
     # add job_id column so we know which execution this is from if appended to predictions table
     # print(predictions_pdf)
     predictions_pdf["job_id"] = context.job_id
-
-    # teradataml doesn't match column names on append.. and so to match / use same table schema as for byom predict
-    # example (see README.md), we must add empty json_report column and change column order manually (v17.0.0.4)
-    # CREATE MULTISET TABLE pima_patient_predictions
-    # (
-    #     job_id VARCHAR(255), -- comes from airflow on job execution
-    #     PatientId BIGINT,    -- entity key as it is in the source data
-    #     HasDiabetes BIGINT,   -- if model automatically extracts target
-    #     json_report CLOB(1048544000) CHARACTER SET UNICODE  -- output of
-    # )
-    # PRIMARY INDEX ( job_id );
-    
     predictions_pdf["json_report"] = ""
     predictions_pdf = predictions_pdf[["job_id", entity_key, target_name, "json_report"]]
     
@@ -118,18 +71,6 @@ def score(context: ModelContext, **kwargs):
         index=False,
         if_exists="replace"
     )
-#     final_pred_df = pred_df.merge(right=predictions_pdf, how = 'inner', on="WELDING_ID")
-    
-#     final_pred_df.rename(columns={'json_report_x':'explainer_variables'},inplace = True)
-#     final_pred_df.drop(['json_report_y'], axis=1, inplace=True)
-#     # print(final_pred_df)
-#     copy_to_sql(
-#         df=final_pred_df,
-#         schema_name=context.dataset_info.predictions_database,
-#         table_name=context.dataset_info.predictions_table,
-#         index=False,
-#         if_exists="replace"
-#     )
         
     print("Saved predictions in Teradata")
 

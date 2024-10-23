@@ -71,7 +71,6 @@ def plot_roc_curve(roc_out, img_filename):
     import matplotlib.pyplot as plt
     from sklearn import metrics
     fpr, tpr, thresholds = metrics.roc_curve(roc_out['HasDiabetes'], roc_out['decisiontreeclassifier_predict_1'])
-    auc = metrics.auc(fpr, tpr)
     plt.plot(fpr,tpr,label="ROC curve AUC="+str(auc), color='darkorange')
     plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--') 
     plt.xlabel('False Positive Rate')
