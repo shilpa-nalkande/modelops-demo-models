@@ -1,0 +1,9 @@
+{
+   "hyperParameters": {
+    "StopThreshold": 0.001,
+    "NumClusters": 5,
+    "Seed": 42,
+    "MaxIterNum": 25,
+    "NumInit": 1,
+    "InitialCentroidsMethod": "'KMEANS++'"}
+}

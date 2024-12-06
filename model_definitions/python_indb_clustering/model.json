@@ -1,0 +1,6 @@
+{
+    "id": "d72cf86a-35b7-43f0-b897-363e4c149690",
+    "name": "Customer Clustering using In-db KMeans",
+    "description": "Clustering using teradata In-db KMeans Clustering",
+    "language": "python"
+}
