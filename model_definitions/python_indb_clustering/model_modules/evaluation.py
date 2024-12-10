@@ -51,35 +51,15 @@ def plot_feature_importance(fi, img_filename):
 
 
 # Define function to plot a confusion matrix from given data
-def plot_confusion_matrix(cf, img_filename):
+def plot_clusters(cf, img_filename):
     import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(7.5, 7.5))
-    ax.matshow(cf, cmap=plt.cm.Blues, alpha=0.3)
-    for i in range(cf.shape[0]):
-        for j in range(cf.shape[1]):
-            ax.text(x=j, y=i,s=cf[i, j], va='center', ha='center', size='xx-large')
-    ax.set_xlabel('Predicted labels');
-    ax.set_ylabel('True labels'); 
-    ax.set_title('Confusion Matrix');
+    plt.scatter(data=cf,x='CustomerID', y='td_distance_kmeans', c='td_clusterid_kmeans')
+    plt.legend('td_clusterid_kmeans')
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
 
 
-# Define function to plot ROC curve from ROC output data 
-def plot_roc_curve(roc_out, img_filename):
-    import matplotlib.pyplot as plt
-    from sklearn import metrics
-    fpr, tpr, thresholds = metrics.roc_curve(roc_out['anomaly_int'], roc_out['randomforestclassifier_predict_1'])
-    plt.plot(fpr,tpr,label="ROC curve AUC="+str(auc), color='darkorange')
-    plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--') 
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (ROC) Curve')
-    plt.legend(loc="lower right")
-    fig = plt.gcf()
-    fig.savefig(img_filename, dpi=200)
-    plt.clf()
     
     
 
@@ -130,7 +110,7 @@ def evaluate(context: ModelContext, **kwargs):
         db_drop_table("KMeans_Predict_Output")
         execute_sql(qry)
     
-    
+    predict_df = DataFrame("KMeans_Predict_Output")
     qry = '''create table Silhouette_tb as (SELECT * FROM TD_Silhouette(
     ON KMeans_Predict_Output AS inputTable
     USING
@@ -159,13 +139,10 @@ def evaluate(context: ModelContext, **kwargs):
         json.dump(evaluation, f)     
     
 
-#      # Save evaluation metrics to a JSON file
-#     with open(f"{context.artifact_output_path}/metrics.json", "w+") as f:
-#         json.dump(evaluation, f)
-        
-#     # Generate and save confusion matrix plot
-#     cm = confusion_matrix(predict_df.to_pandas()['anomaly_int'], predict_df.to_pandas()['randomforestclassifier_predict_1'])
-#     plot_confusion_matrix(cm, f"{context.artifact_output_path}/confusion_matrix")
+     
+    # Generate and save cluster plot
+
+    plot_clusters(predict_df.to_pandas(), f"{context.artifact_output_path}/clusters_plots")
     
 #     # Generate and save ROC curve plot
 #     roc_out = ROC(

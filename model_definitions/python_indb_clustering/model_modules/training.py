@@ -24,20 +24,10 @@ warnings.simplefilter(action='ignore', category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Compute feature importance based on tree traversal
-def compute_feature_importance(model,X_train):
-    # from sklearn.inspection import permutation_importance
-    feat_dict= {}
-    for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
-        feat_dict[col]=val
-    feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
-    
-    return feat_df
-    
+   
 
-def plot_feature_importance(fi, img_filename):
-    feat_importances = fi.sort_values(['Importance'],ascending = False).head(10)
-    feat_importances.plot(kind='barh').set_title('Feature Importance')
+def plot_cluster(pd_cluster, img_filename):
+    pd_cluster.plot(x='td_clusterid_kmeans', y='td_size_kmeans',kind='bar').set_title('Cluster Size')
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
@@ -77,8 +67,8 @@ def train(context: ModelContext, **kwargs):
          
     print("Starting training using teradata kmeans...")
     
-    qry = f'''SELECT TOP 5 * from TD_KMeans (
-    ON Transformed_Customer_Data as InputTable
+    qry = f'''SELECT * from TD_KMeans (
+    ON Transformed_Customer_Data AS InputTable
     OUT TABLE ModelTable(KMeans_Model)
     USING
         IdColumn('CustomerID')
@@ -116,9 +106,10 @@ def train(context: ModelContext, **kwargs):
 #     kmeans_out.to_sql("kmeans_model", if_exists="replace")    
     print("Complete kmeans training...")
     
-    # Calculate feature importance and generate plot
-    # feature_importance = compute_feature_importance(RF_classifier.modelObj,X_train)
-    # plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
+    # Plot cluster size
+    df_cluster = DataFrame("KMeans_Model")
+    df_cluster = df_cluster[df_cluster.td_clusterid_kmeans.isnull()==0]
+    plot_cluster(df_cluster.to_pandas(), f"{context.artifact_output_path}/cluster_size")
     
 #     record_training_stats(
 #         train_df,
