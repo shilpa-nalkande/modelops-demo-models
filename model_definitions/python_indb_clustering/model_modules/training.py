@@ -26,8 +26,12 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
    
 
-def plot_cluster(pd_cluster, img_filename):
+def plot_cluster_size(pd_cluster, img_filename):
     pd_cluster.plot(x='td_clusterid_kmeans', y='td_size_kmeans',kind='bar').set_title('Cluster Size')
+    plt.title('# of Customers per Cluster')
+    plt.xlabel('Cluster ID')
+    plt.ylabel('Count of Customers')
+    plt.legend('', frameon=False)
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
@@ -109,7 +113,7 @@ def train(context: ModelContext, **kwargs):
     # Plot cluster size
     df_cluster = DataFrame("KMeans_Model")
     df_cluster = df_cluster[df_cluster.td_clusterid_kmeans.isnull()==0]
-    plot_cluster(df_cluster.to_pandas(), f"{context.artifact_output_path}/cluster_size")
+    plot_cluster_size(df_cluster.to_pandas(), f"{context.artifact_output_path}/cluster_size")
     
 #     record_training_stats(
 #         train_df,

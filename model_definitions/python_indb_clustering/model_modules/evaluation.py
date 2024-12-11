@@ -31,36 +31,29 @@ warnings.filterwarnings('ignore')
 warnings.simplefilter(action='ignore', category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
+from teradataml.analytics.valib import *
+configure.val_install_location = "val"
 
         
-# Compute feature importance based on tree traversal
-def compute_feature_importance(model,X_train):
-    feat_dict= {}
-    for col, val in sorted(zip(X_train.columns, model.feature_importances_),key=lambda x:x[1],reverse=True):
-        feat_dict[col]=val
-    feat_df = pd.DataFrame({'Feature':feat_dict.keys(),'Importance':feat_dict.values()})
-    # print(feat_df)
-    return feat_df
-
-def plot_feature_importance(fi, img_filename):
-    feat_importances = fi.sort_values(['Importance'],ascending = False).head(10)
-    feat_importances.plot(kind='barh').set_title('Feature Importance')
-    fig = plt.gcf()
-    fig.savefig(img_filename, dpi=500)
-    plt.clf()
-
 
 # Define function to plot a confusion matrix from given data
 def plot_clusters(cf, img_filename):
     import matplotlib.pyplot as plt
-    plt.scatter(data=cf,x='CustomerID', y='td_distance_kmeans', c='td_clusterid_kmeans')
-    plt.legend('td_clusterid_kmeans')
+    # plt.scatter(data=cf,x='CustomerID', y='td_distance_kmeans', 
+    #             c='td_clusterid_kmeans', label='td_clusterid_kmeans')
+    # # labels[] = cf['td_clusterid_kmeans'].to_list()
+    # # plt.legend(labels,frameon=True, loc='best')
+    # plt.legend(loc='best')
+    # plt.title('Clusters for Customers')
+    plt.figure(figsize=(10, 8))
+    scatter = plt.scatter(cf['Factor 1'], cf['Factor 2'], c=cf['td_clusterid_kmeans'], cmap='viridis')
+    plt.title('PCA Visualization of Clusters')
+    plt.legend(*scatter.legend_elements(), title='Clusters')
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
 
-
-    
+  
     
 
 def evaluate(context: ModelContext, **kwargs):
@@ -74,17 +67,7 @@ def evaluate(context: ModelContext, **kwargs):
 
     # Load the test data from Teradata
     test_df = DataFrame.from_query(context.dataset_info.sql)
-#     X_test = test_df.drop(['anomaly_int','WELDING_ID'], axis = 1)
-#     y_test = test_df.select(["anomaly_int"])
-    # Scaling the test set
-#     print ("Loading scaler...")
-#     scaler = DataFrame(f"scaler_${context.model_version}")
 
-#     scaled_test = ScaleTransform(
-#         data=test_df,
-#         object=scaler,
-#         accumulate = [entity_key]
-#     )
     
     print("Evaluating kmeans...")
 #     kmeans_model = DataFrame("kmeans_model")
@@ -141,8 +124,19 @@ def evaluate(context: ModelContext, **kwargs):
 
      
     # Generate and save cluster plot
-
-    plot_clusters(predict_df.to_pandas(), f"{context.artifact_output_path}/clusters_plots")
+    # return(predict_df)
+    df_columns = predict_df.drop(['CustomerID', 'td_clusterid_kmeans', 'td_distance_kmeans'], axis=1)
+    column_list = df_columns.columns
+       
+    pca_obj = valib.PCA(data=predict_df,
+                        columns=column_list)
+    
+    obj = valib.PCAPredict(data=predict_df,
+                           model=pca_obj.result,
+                           index_columns="CustomerID")
+    
+    final_df=predict_df.join(other = obj.result, on = ["CustomerID"], how = "inner",lprefix = "l", rprefix = "r")
+    plot_clusters(final_df.to_pandas().reset_index(), f"{context.artifact_output_path}/clusters_plots")
     
 #     # Generate and save ROC curve plot
 #     roc_out = ROC(
