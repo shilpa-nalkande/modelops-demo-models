@@ -9,10 +9,10 @@ def run_task(context: ModelContext, **kwargs):
     aoa_create_context()
     df = DataFrame.from_query("SELECT * FROM DEMO_ModelOps.pima_patient_features")
     
-    start_date = CAST('1950-01-01' AS DATE)
-    end_date = CAST('2000-01-01' AS DATE)
+    # start_date = CAST('1950-01-01' AS DATE)
+    # end_date = CAST('2000-01-01' AS DATE)
     
-    column = literal_column(start_date + (end_date - start_date) * np.random.rand(len(df_pd)))
+    column = literal_column(CAST('1950-01-01' AS DATE) + (CAST('2000-01-01' AS DATE) - CAST('1950-01-01' AS DATE)) * np.random.rand(len(df_pd)))
     df = df.assign('birthday' = column)
     df = df.assign('calculated_age' = (CURRENT_DATE - df.birthday)/365)
     
