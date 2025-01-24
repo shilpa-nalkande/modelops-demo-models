@@ -9,14 +9,15 @@ def run_task(context: ModelContext, **kwargs):
     aoa_create_context()
     df = DataFrame.from_query("SELECT * FROM DEMO_ModelOps.pima_patient_features")
     
-    # start_date = CAST('1950-01-01' AS DATE)
-    # end_date = CAST('2000-01-01' AS DATE)
-    
-    column = literal_column(CAST('1950-01-01' AS DATE) + (CAST('2000-01-01' AS DATE) - CAST('1950-01-01' AS DATE)) * np.random.rand(len(df_pd)))
+
+    from sqlalchemy import literal_column
+    from teradatasqlalchemy import DATE
+    import numpy as np
+    column = literal_column("CAST('1950-01-01' AS DATE) + (CAST('2000-01-01' AS DATE) - CAST('1950-01-01' AS DATE)) * RANDOM(1,100)", type_=DATE)
     df = df.assign('birthday' = column)
     df = df.assign('calculated_age' = (CURRENT_DATE - df.birthday)/365)
     
-    print(df)
+#     print(df)
 #     # Calculate age
 #     df_pd['calculated_age'] = df_pd['birthday'].apply(lambda x: (pd.to_datetime('today') - x).days // 365)
     
