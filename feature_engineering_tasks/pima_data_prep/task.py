@@ -14,8 +14,8 @@ def run_task(context: ModelContext, **kwargs):
     from teradatasqlalchemy import DATE
     import numpy as np
     column = literal_column("CAST('1950-01-01' AS DATE) + (CAST('2000-01-01' AS DATE) - CAST('1950-01-01' AS DATE)) * RANDOM(1,100)", type_=DATE)
-    df = df.assign('birthday' = column)
-    df = df.assign('calculated_age' = (CURRENT_DATE - df.birthday)/365)
+    df = df.assign(birthday = column)
+    df = df.assign(calculated_age = (CURRENT_DATE - df.birthday)/365)
     
 #     print(df)
 #     # Calculate age
