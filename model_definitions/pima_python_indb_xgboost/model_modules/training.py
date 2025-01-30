@@ -37,10 +37,14 @@ def compute_feature_explain(explain_df):
     df=df.rename(columns={'index': 'Feature', 0: 'Importance'})
     mean_positive = df[df['Importance'] > 0]
     mean_negative = df[df['Importance'] < 0]
-    mean_positive['Feature'] = mean_positive['Feature'].str.replace('max_TD_', '')
-    mean_positive['Feature'] = mean_positive['Feature'].str.replace('_SHAP', '')
-    mean_negative['Feature'] = mean_negative['Feature'].str.replace('min_TD_', '')
-    mean_negative['Feature'] = mean_negative['Feature'].str.replace('_SHAP', '')
+    mean_positive['Feature'] = mean_positive.loc[:,'Feature'].str.replace('max_TD_', '')
+    mean_positive['Feature'] = mean_positive.loc[:,'Feature'].str.replace('_SHAP', '')
+    mean_negative['Feature'] = mean_negative.loc[:,'Feature'].str.replace('min_TD_', '')
+    mean_negative['Feature'] = mean_negative.loc[:,'Feature'].str.replace('_SHAP', '')
+    # mean_positive['Feature'] = mean_positive['Feature'].str.replace('max_TD_', '')
+    # mean_positive['Feature'] = mean_positive['Feature'].str.replace('_SHAP', '')
+    # mean_negative['Feature'] = mean_negative['Feature'].str.replace('min_TD_', '')
+    # mean_negative['Feature'] = mean_negative['Feature'].str.replace('_SHAP', '')
     return mean_positive,mean_negative
     
 
@@ -83,8 +87,7 @@ def train(context: ModelContext, **kwargs):
 
     # Load the training data from Teradata
     train_df = DataFrame.from_query(context.dataset_info.sql)
-    # fs = FeatureStore(repo='demo_user')
-    # train_fs_df = fs.get_dataset('PIMA')
+    
     print ("Scaling using InDB Functions...")
     
     # Scale the training data using the ScaleFit and ScaleTransform functions
@@ -139,8 +142,6 @@ def train(context: ModelContext, **kwargs):
     df = compute_feature_importance(feat_df)
     plot_feature_importance(df, f"{context.artifact_output_path}/feature_importance")
     pos_expl_df, neg_expl_df = compute_feature_explain(explain_df)
-    # print(pos_expl_df)
-    # print(neg_expl_df)
     plot_feature_explain(pos_expl_df,neg_expl_df, f"{context.artifact_output_path}/feature_explainability")
 
     record_training_stats(

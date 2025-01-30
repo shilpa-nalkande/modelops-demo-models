@@ -140,10 +140,9 @@ def evaluate(context: ModelContext, **kwargs):
     # Generate and save confusion matrix plot
     cm_df = ClassificationEvaluator_obj.result
     cm_df = cm_df.select(['CLASS_1','CLASS_2'])
-    print(cm_df.get_values())
+    cm_df_t = cm_df.to_pandas().T
     # cm = confusion_matrix(predicted_data.result.to_pandas()['HasDiabetes'], predicted_data.result.to_pandas()['Prediction'])
-    # print(cm)
-    plot_confusion_matrix(cm_df.get_values(), f"{context.artifact_output_path}/confusion_matrix")
+    plot_confusion_matrix(cm_df_t.values, f"{context.artifact_output_path}/confusion_matrix")
 
     # Generate and save ROC curve plot
     roc_out = ROC(
@@ -154,15 +153,6 @@ def evaluate(context: ModelContext, **kwargs):
         num_thresholds=1000
     )
     plot_roc_curve(roc_out, f"{context.artifact_output_path}/roc_curve")
-
-    # Calculate feature importance and generate plot
-    # try:
-    #     model_pdf = model.result.to_pandas()['classification_tree']
-    #     feature_importance = compute_feature_importance(model_pdf)
-    #     feature_importance_df = pd.DataFrame(list(feature_importance.items()), columns=['Feature', 'Importance'])
-    #     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
-    # except:
-    #     feature_importance = {}
 
     predictions_table = "predictions_tmp"
     copy_to_sql(df=predicted_data.result, table_name=predictions_table, index=False, if_exists="replace", temporary=True)

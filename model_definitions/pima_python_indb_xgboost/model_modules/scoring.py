@@ -31,7 +31,7 @@ def score(context: ModelContext, **kwargs):
     test_df = DataFrame.from_query(context.dataset_info.sql)
     features_tdf = DataFrame.from_query(context.dataset_info.sql)
     # features_pdf = features_tdf.to_pandas(all_rows=True)
-    # print(features_pdf)
+    
     # Scaling the test set
     print ("Loading scaler...")
     scaler = DataFrame(f"scaler_${context.model_version}")
@@ -56,8 +56,7 @@ def score(context: ModelContext, **kwargs):
     )
     
     
-    # Convert predictions to pandas DataFrame and process
-    # predictions_pdf = predictions.result.to_pandas(all_rows=True).rename(columns={"Prediction": target_name}).astype(int)
+    # store the predictions
     predictions_df = predictions.result
     predictions_pdf = predictions_df.assign(drop_columns=True,
                                              job_id=translate(context.job_id),
@@ -67,21 +66,9 @@ def score(context: ModelContext, **kwargs):
                                              
     
     
-    # converted_data = ConvertTo(data = predictions_pdf,
-    #                            target_columns = ['job_id','PatientId', 'HasDiabetes','json_report'],
-    #                            target_datatype = ["VARCHAR(charlen=255,charset=LATIN,casespecific=NO)"
-    #                                               ,"integer","integer","VARCHAR(charlen=5000,charset=LATIN)"])
-    # df=converted_data.result
-    
-    print(predictions_pdf)
     print("Finished Scoring")
 
-    # store the predictions
-#     predictions_pdf = pd.DataFrame(predictions_pdf, columns=[target_name])
-#     predictions_pdf[entity_key] = features_pdf.index.values
-#     # add job_id column so we know which execution this is from if appended to predictions table
-#     predictions_pdf["job_id"] = context.job_id
-
+    
 #     # teradataml doesn't match column names on append.. and so to match / use same table schema as for byom predict
 #     # example (see README.md), we must add empty json_report column and change column order manually (v17.0.0.4)
 #     # CREATE MULTISET TABLE pima_patient_predictions
@@ -94,7 +81,7 @@ def score(context: ModelContext, **kwargs):
 #     # PRIMARY INDEX ( job_id );
 #     predictions_pdf["json_report"] = ""
 #     predictions_pdf = predictions_pdf[["job_id", entity_key, target_name, "json_report"]]
-    # print(predictions_pdf.tdtypes)
+
     copy_to_sql(
         df=predictions_pdf,
         schema_name=context.dataset_info.predictions_database,
