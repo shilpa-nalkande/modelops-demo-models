@@ -95,7 +95,11 @@ def train(context: ModelContext, **kwargs):
     # Train the model using XGBoost
     model = XGBoost(
                    data = train_df,
-                   input_columns = ['1:15','17:20'],
+                   input_columns = ["Tenure", "InternetService", "OnlineSecurity", "SeniorCitizen",
+                                    "PaymentMethod", "OnlineBackup", "Dependents", "Partner", "MultipleLines", 
+                                    "StreamingMovies", "Gender", "PhoneService", "TotalCharges", "Contract", 
+                                    "MonthlyCharges", "DeviceProtection", "PaperlessBilling", "StreamingTV", 
+                                    "TechSupport"],
                    response_column = 'Churn',
                    model_type = 'CLASSIFICATION',
                      )
