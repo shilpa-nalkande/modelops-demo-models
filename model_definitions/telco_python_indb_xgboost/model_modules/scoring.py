@@ -39,7 +39,7 @@ def score(context: ModelContext, **kwargs):
         object=model,
         newdata=test_df,
         model_type = 'Classification',
-        accumulate=target_name,
+        # accumulate=target_name,
         id_column=entity_key,
         output_prob=True,
         output_responses=['0','1'],
