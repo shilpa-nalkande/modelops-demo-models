@@ -40,8 +40,7 @@ def score(context: ModelContext, **kwargs):
                                         id_column = "CustomerID",
                                         detailed = False,
                                         output_prob = True,
-                                        output_responses = ['0','1'],
-                                        accumulate="Churn")
+                                        output_responses = ['0','1'])
     
     # Convert predictions to pandas DataFrame and process
     # predictions_pdf = predictions.result.to_pandas(all_rows=True).rename(columns={"Prediction": target_name}).astype(int)
