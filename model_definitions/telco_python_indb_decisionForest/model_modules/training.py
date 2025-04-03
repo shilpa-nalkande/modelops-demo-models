@@ -143,12 +143,17 @@ def train(context: ModelContext, **kwargs):
     # print(pos_expl_df)
     # print(neg_expl_df)
     plot_feature_explain(pos_expl_df,neg_expl_df, f"{context.artifact_output_path}/feature_explainability")
+    
+    categorical=["Partner", "Dependents","Contract", "SeniorCitizen","PaymentMethod", "TechSupport", "StreamingTV", "OnlineSecurity", 
+                                        "PhoneService", "OnlineBackup", "MultipleLines", "DeviceProtection", "Gender", 
+                                        "PaperlessBilling", "StreamingMovies", "InternetService", "Churn"]
 
     record_training_stats(
         train_df,
         features=feature_names,
         targets=[target_name],
-        categorical=[target_name],
+        categorical=categorical
+        ,
         # feature_importance=feature_importance,
         context=context
     )
