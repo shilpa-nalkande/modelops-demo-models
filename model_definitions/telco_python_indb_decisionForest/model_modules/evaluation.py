@@ -149,13 +149,13 @@ def evaluate(context: ModelContext, **kwargs):
     plot_roc_curve(roc_out, f"{context.artifact_output_path}/roc_curve")
 
     # Calculate feature importance and generate plot
-    try:
-        model_pdf = model.result.to_pandas()['classification_tree']
-        feature_importance = compute_feature_importance(model_pdf)
-        feature_importance_df = pd.DataFrame(list(feature_importance.items()), columns=['Feature', 'Importance'])
-        plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
-    except:
-        feature_importance = {}
+    # try:
+    #     model_pdf = model.result.to_pandas()['classification_tree']
+    #     feature_importance = compute_feature_importance(model_pdf)
+    #     feature_importance_df = pd.DataFrame(list(feature_importance.items()), columns=['Feature', 'Importance'])
+    #     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
+    # except:
+    #     feature_importance = {}
 
     predictions_table = "Telco_Churn_Predictions"
     copy_to_sql(df=predicted_data.result, table_name=predictions_table, index=False, if_exists="replace", temporary=True)
@@ -165,7 +165,7 @@ def evaluate(context: ModelContext, **kwargs):
         record_evaluation_stats(
             features_df=test_df,
             predicted_df=DataFrame.from_query(f"SELECT * FROM {predictions_table}"),
-            feature_importance=feature_importance,
+            # feature_importance=feature_importance,
             context=context
         )
 
