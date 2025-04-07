@@ -1,6 +1,6 @@
 {
-    "id": "4fd55d2a-2384-4c1c-8e66-cf2e4cf2c76e",
-    "name": "In-database Telco Churn Prediction DF",
-    "description": "In-database DF for Telco Customer Churn Prediction",
+    "id": "8610f466",
+    "name": "In-database Telco Churn Prediction DecisionForest",
+    "description": "In-database DecisionForest for Telco Customer Churn Prediction",
     "language": "python"
 }

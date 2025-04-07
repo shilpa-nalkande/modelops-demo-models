@@ -6,6 +6,6 @@
     "min_node_size": 1,
     "num_trees": -1,
     "seed": 42,
-    "tree_type": "Classification",
+    "tree_type": "Classification"
     }
 }
