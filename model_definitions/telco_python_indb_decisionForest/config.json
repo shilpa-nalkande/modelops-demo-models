@@ -1,14 +1,11 @@
 {
    "hyperParameters": {
-    "model_type": "Classification",
-    "scale_method":"RANGE",
-    "miss_value":"KEEP",
-    "global_scale": "False",
-    "multiplier":"1",
-    "intercept":"0",
+    "tree_type": "Classification",
+    "family": 'Binomial',
+    "min_impurity": 0.0,
     "max_depth": 5,
+    "min_node_size": 1,
     "num_trees": -1,
-    "tree_size": 0.5,
-    "lambda1" : 1.5
+    "seed": 42,
     }
 }

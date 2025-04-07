@@ -54,28 +54,11 @@ def score(context: ModelContext, **kwargs):
                                              
     
     
-    # converted_data = ConvertTo(data = predictions_pdf,
-    #                            target_columns = ['job_id','PatientId', 'HasDiabetes','json_report'],
-    #                            target_datatype = ["VARCHAR(charlen=255,charset=LATIN,casespecific=NO)"
-    #                                               ,"integer","integer","VARCHAR(charlen=5000,charset=LATIN)"])
-    # df=converted_data.result
-    
     # print(predictions_pdf)
     print("Finished Scoring")
     # print(predictions_pdf)
 
     # store the predictions
-
-#     # teradataml doesn't match column names on append.. and so to match / use same table schema as for byom predict
-#     # example (see README.md), we must add empty json_report column and change column order manually (v17.0.0.4)
-#     # CREATE MULTISET TABLE pima_patient_predictions
-#     # (
-#     #     job_id VARCHAR(255), -- comes from airflow on job execution
-#     #     PatientId BIGINT,    -- entity key as it is in the source data
-#     #     HasDiabetes BIGINT,   -- if model automatically extracts target
-#     #     json_report CLOB(1048544000) CHARACTER SET UNICODE  -- output of
-#     # )
-#     # PRIMARY INDEX ( job_id );
 
     copy_to_sql(
         df=predictions_pdf,

@@ -100,25 +100,15 @@ def train(context: ModelContext, **kwargs):
                                     "MonthlyCharges", "DeviceProtection", "PaperlessBilling", "StreamingTV", 
                                     "TechSupport"],
                 response_column = 'Churn',
-                family = 'Binomial',
-                min_impurity= 0.0,
-                max_depth= 5,
-                min_node_size= 1,
-                num_trees= -1,
-                seed= 42,
-                tree_type = 'CLASSIFICATION')
+                family = context.hyperparams["family"],
+                min_impurity = context.hyperparams["min_impurity"],
+                max_depth = context.hyperparams["max_depth"],
+                min_node_size = context.hyperparams["min_node_size"],
+                num_trees = context.hyperparams["num_trees"],
+                seed = context.hyperparams["seed"],
+                tree_type = context.hyperparams["tree_type"])
     
-    # XGBoost(
-    #                data = train_df,
-    #                input_columns = ["Tenure", "InternetService", "OnlineSecurity", "SeniorCitizen",
-    #                                 "PaymentMethod", "OnlineBackup", "Dependents", "Partner", "MultipleLines", 
-    #                                 "StreamingMovies", "Gender", "PhoneService", "TotalCharges", "Contract", 
-    #                                 "MonthlyCharges", "DeviceProtection", "PaperlessBilling", "StreamingTV", 
-    #                                 "TechSupport"],
-    #                response_column = 'Churn',
-    #                model_type = 'CLASSIFICATION',
-    #                  )
-
+    
     # Save the trained model to SQL
     model.result.to_sql(f"model_${context.model_version}", if_exists="replace")  
     print("Saved trained model")
@@ -143,20 +133,6 @@ def train(context: ModelContext, **kwargs):
     # print(pos_expl_df)
     # print(neg_expl_df)
     plot_feature_explain(pos_expl_df,neg_expl_df, f"{context.artifact_output_path}/feature_explainability")
-
-    # categorical=["Partner", "Dependents","Contract", "SeniorCitizen","PaymentMethod", "TechSupport", "StreamingTV", "OnlineSecurity", 
-    #                                     "PhoneService", "OnlineBackup", "MultipleLines", "DeviceProtection", "Gender", 
-    #                                     "PaperlessBilling", "StreamingMovies", "InternetService"]
-
-
-    # record_training_stats(
-    #     train_df,
-    #     features=["Tenure",  "MonthlyCharges",  "TotalCharges"],
-    #     targets=[target_name],
-    #     categorical=categorical,
-    #     # feature_importance=feature_importance,
-    #     context=context
-    # )
 
     categorical=["Partner", "Dependents","Contract", "SeniorCitizen","PaymentMethod", "TechSupport", "StreamingTV", "OnlineSecurity", 
                                         "PhoneService", "OnlineBackup", "MultipleLines", "DeviceProtection", "Gender", 
