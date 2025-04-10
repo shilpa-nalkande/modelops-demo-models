@@ -39,7 +39,7 @@ def score(context: ModelContext, **kwargs):
                             id_column='txn_id',
                             object_order_column=['task_index', 'tree_num',
                                                'iter', 'tree_order'],
-                            accumulate='isFraud',
+                            # accumulate='isFraud',
                             output_prob=True,
                             output_responses=['0', '1']
                         )
