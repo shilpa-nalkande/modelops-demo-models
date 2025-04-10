@@ -97,6 +97,6 @@ def score(context: ModelContext, **kwargs):
             WHERE job_id = '{context.job_id}'
     """)
 
-    # record_scoring_stats(features_df=features_tdf, predicted_df=predictions_df, context=context)
+    record_scoring_stats(features_df=features_tdf, predicted_df=predictions_df, context=context)
 
     print("All done!")
