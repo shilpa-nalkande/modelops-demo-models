@@ -1,0 +1,9 @@
+{
+   "hyperParameters": {
+        "lambda1":120.0,
+        "model_type":"Classification",
+        "seed":42,
+        "shrinkage_factor":0.1,
+        "max_depth":7
+    }
+}
