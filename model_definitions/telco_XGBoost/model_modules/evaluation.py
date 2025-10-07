@@ -100,7 +100,7 @@ def evaluate(context: ModelContext, **kwargs):
         output_responses=['0','1'],
         object_order_column=['task_index', 'tree_num', 'iter', 'class_num', 'tree_order']
     )
-
+    print(predictions.result)
     # Convert the predicted data into the specified format
     predicted_data = ConvertTo(
         data = predictions.result,
