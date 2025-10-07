@@ -1,3 +1,0 @@
-teradataml==20.0.0.7 
-teradatasqlalchemy==20.0.0.7
-teradatamodelops==7.1.8
