@@ -107,7 +107,7 @@ def evaluate(context: ModelContext, **kwargs):
         target_columns = [target_name,'Prediction'],
         target_datatype = ["INTEGER"]
     )
-
+    print(predicted_data.result)
     # Evaluate classification metrics using ClassificationEvaluator
     ClassificationEvaluator_obj = ClassificationEvaluator(
         data=predicted_data.result,
@@ -117,7 +117,7 @@ def evaluate(context: ModelContext, **kwargs):
     )
 
      # Extract and store evaluation metrics
-        
+    print(ClassificationEvaluator_obj.output_data)  
     metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
     print(metrics_pd)
     evaluation = {
