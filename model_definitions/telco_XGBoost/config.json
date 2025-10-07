@@ -1,0 +1,8 @@
+{
+   "hyperParameters": {
+    "model_type": "Classification",
+    "max_depth": 8,
+    "num_boosted_trees": 100,
+    "lambda1" : 1.5
+    }
+}
