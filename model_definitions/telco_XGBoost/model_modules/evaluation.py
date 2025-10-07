@@ -77,7 +77,7 @@ def evaluate(context: ModelContext, **kwargs):
 
     # Load the test data from Teradata
     test_df = DataFrame.from_query(context.dataset_info.sql)
-
+    print(test_df)
     # Scaling the test set
     print ("Loading scaler...")
     scaler = DataFrame(f"scaler_${context.model_version}")
@@ -87,7 +87,7 @@ def evaluate(context: ModelContext, **kwargs):
         object=scaler,
         accumulate = [target_name,entity_key]
     )
-    
+    print(scaled_test.result)
     print("Evaluating...")
     # Make predictions using the XGBoostPredict function
     predictions = XGBoostPredict(
