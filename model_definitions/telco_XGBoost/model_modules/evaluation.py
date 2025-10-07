@@ -113,7 +113,7 @@ def evaluate(context: ModelContext, **kwargs):
         data=predicted_data.result,
         observation_column=target_name,
         prediction_column='Prediction',
-        num_labels=2
+        labels = ['0', '1']
     )
 
      # Extract and store evaluation metrics
