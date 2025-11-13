@@ -15,7 +15,7 @@ from teradatasqlalchemy import INTEGER
 
 
 def score(context: ModelContext, **kwargs):
-    
+
     aoa_create_context()
 
     # Load the trained model from SQL
@@ -43,7 +43,7 @@ def score(context: ModelContext, **kwargs):
                             output_prob=True,
                             output_responses=['0', '1']
                         )
-    
+
     # Convert predictions to pandas DataFrame and process
     # predictions_pdf = predictions.result.to_pandas(all_rows=True).rename(columns={"Prediction": target_name}).astype(int)
     predictions_df = predictions.result
@@ -53,15 +53,15 @@ def score(context: ModelContext, **kwargs):
                                              txn_id=predictions_df.txn_id,
                                              isFraud=predictions_df.Prediction.cast(type_=INTEGER),
                                              json_report=translate("  "))
-                                             
-    
-    
+
+
+
     # converted_data = ConvertTo(data = predictions_pdf,
     #                            target_columns = ['job_id','PatientId', 'HasDiabetes','json_report'],
     #                            target_datatype = ["VARCHAR(charlen=255,charset=LATIN,casespecific=NO)"
     #                                               ,"integer","integer","VARCHAR(charlen=5000,charset=LATIN)"])
     # df=converted_data.result
-    
+
     # print(predictions_pdf)
     print("Finished Scoring")
     # print(predictions_pdf)
@@ -86,7 +86,7 @@ def score(context: ModelContext, **kwargs):
         index=False,
         if_exists="append"
     )
-    
+
     print("Saved predictions in Teradata")
 
     # calculate stats

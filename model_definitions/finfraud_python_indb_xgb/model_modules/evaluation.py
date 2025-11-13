@@ -40,7 +40,7 @@ def plot_confusion_matrix(cf, img_filename):
     fig.savefig(img_filename, dpi=500)
     plt.clf()
 
-    
+
 def plot_roc_curve(roc_out, img_filename):
     from teradataml import Figure
     figure = Figure(width=500, height=400, heading="Receiver Operating Characteristic (ROC) Curve")
@@ -108,7 +108,7 @@ def evaluate(context: ModelContext, **kwargs):
     )
 
      # Extract and store evaluation metrics
-        
+
     metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
 
     evaluation = {
@@ -127,7 +127,7 @@ def evaluate(context: ModelContext, **kwargs):
      # Save evaluation metrics to a JSON file
     with open(f"{context.artifact_output_path}/metrics.json", "w+") as f:
         json.dump(evaluation, f)
-        
+
     # Generate and save confusion matrix plot
     cm_df = ClassificationEvaluator_obj.result
     # print(cm_df)

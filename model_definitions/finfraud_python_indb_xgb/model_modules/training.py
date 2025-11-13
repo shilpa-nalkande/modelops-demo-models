@@ -48,7 +48,7 @@ def compute_feature_explain(explain_df):
     # mean_negative['Feature'] = mean_negative['Feature'].str.replace('min_TD_', '')
     # mean_negative['Feature'] = mean_negative['Feature'].str.replace('_SHAP', '')
     return mean_positive,mean_negative
-    
+
 
 def plot_feature_importance(df, img_filename):
     df = df.sort_values(by="Importance", ascending=False)
@@ -62,7 +62,7 @@ def plot_feature_importance(df, img_filename):
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()
-    
+
 def plot_feature_explain(mean_positive,mean_negative, img_filename):
     fig, ax = plt.subplots(figsize=(10, 6))
     bar_width = 0.35
@@ -78,10 +78,10 @@ def plot_feature_explain(mean_positive,mean_negative, img_filename):
     fig = plt.gcf()
     fig.savefig(img_filename, dpi=500)
     plt.clf()    
-    
+
 def train(context: ModelContext, **kwargs):
     aoa_create_context()
-    
+
     # Extracting feature names, target name, and entity key from the context
     feature_names = context.dataset_info.feature_names
     target_name = context.dataset_info.target_names[0]
@@ -89,7 +89,7 @@ def train(context: ModelContext, **kwargs):
 
     # Load the training data from Teradata
     train_df = DataFrame.from_query(context.dataset_info.sql)
-    
+
     print("Starting training...")
 
     # Train the model using XGBoost
@@ -107,7 +107,7 @@ def train(context: ModelContext, **kwargs):
     #             num_trees= -1,
     #             seed= 42,
     #             tree_type = 'CLASSIFICATION')
-    
+
     model = XGBoost(
                     data=train_df,
                     input_columns=["amount", "newbalanceOrig", "oldbalanceDest", "newbalanceDest", "oldbalanceOrig", "CASH_IN_type", 
@@ -122,7 +122,7 @@ def train(context: ModelContext, **kwargs):
     # Save the trained model to SQL
     model.result.to_sql(f"model_${context.model_version}", if_exists="replace")  
     print("Saved trained model")
-    
+
     #Shap explainer 
     Shap_out = Shap(data=train_df, 
                 object=model.result, 
@@ -131,19 +131,19 @@ def train(context: ModelContext, **kwargs):
                 model_type="Classification",
                 input_columns=feature_names, 
                 detailed=True)
-    
+
     feat_df = Shap_out.output_data
     explain_df = Shap_out.result
     # print(explain_df)
 
- 
+
     df = compute_feature_importance(feat_df)
     plot_feature_importance(df, f"{context.artifact_output_path}/feature_importance")
     pos_expl_df, neg_expl_df = compute_feature_explain(explain_df)
     # print(pos_expl_df)
     # print(neg_expl_df)
     plot_feature_explain(pos_expl_df,neg_expl_df, f"{context.artifact_output_path}/feature_explainability")
-    
+
     categorical=["CASH_IN_type","CASH_OUT_type", "DEBIT_type", "PAYMENT_type", "TRANSFER_type","isFraud"]
 
     record_training_stats(
@@ -155,5 +155,5 @@ def train(context: ModelContext, **kwargs):
         # feature_importance=feature_importance,
         context=context
     )
-    
+
     print("All done!")
