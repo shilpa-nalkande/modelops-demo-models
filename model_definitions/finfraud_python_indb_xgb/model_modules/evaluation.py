@@ -110,6 +110,7 @@ def evaluate(context: ModelContext, **kwargs):
      # Extract and store evaluation metrics
 
     metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
+    print(metrics_pd)
 
     evaluation = {
         'Accuracy': '{:.2f}'.format(metrics_pd.MetricValue[0]),
