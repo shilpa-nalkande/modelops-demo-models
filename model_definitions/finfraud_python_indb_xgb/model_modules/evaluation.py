@@ -99,12 +99,14 @@ def evaluate(context: ModelContext, **kwargs):
         target_datatype = ["INTEGER"]
     )
 
+    print(predicted_data)
+
     # Evaluate classification metrics using ClassificationEvaluator
     ClassificationEvaluator_obj = ClassificationEvaluator(
         data=predicted_data.result,
         observation_column=target_name,
         prediction_column='Prediction',
-        labels=['0','1']
+        num_labels=2
     )
 
      # Extract and store evaluation metrics
