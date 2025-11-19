@@ -167,13 +167,16 @@ def evaluate(context: ModelContext, **kwargs):
     predictions_table = "Fin_Fraud_Predictions"
     copy_to_sql(df=predicted_data.result, table_name=predictions_table, index=False, if_exists="replace", temporary=True)
 
+    print("test_df", test_df)
+    print("predicted_data", predicted_data.result)
+
     # calculate stats if training stats exist
-    if os.path.exists(f"{context.artifact_input_path}/data_stats.json"):
-        record_evaluation_stats(
-            features_df=test_df,
-            predicted_df=DataFrame.from_query(f"SELECT * FROM {predictions_table}"),
-            # feature_importance=feature_importance,
-            context=context
-        )
+    # if os.path.exists(f"{context.artifact_input_path}/data_stats.json"):
+    record_evaluation_stats(
+        features_df=test_df,
+        predicted_df=predicted_data.result,
+        # feature_importance=feature_importance,
+        context=context
+    )
 
     print("All done!")
