@@ -77,6 +77,9 @@ def evaluate(context: ModelContext, **kwargs):
     # Load the test data from Teradata
     test_df = DataFrame.from_query(context.dataset_info.sql)
 
+    print(test_df)
+    print(model)
+
     # Make predictions using the XGBoostPredict function
     print("Evaluating ...........")
     predictions = XGBoostPredict(
