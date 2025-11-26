@@ -145,7 +145,7 @@ def train(context: ModelContext, **kwargs):
     plot_feature_explain(pos_expl_df,neg_expl_df, f"{context.artifact_output_path}/feature_explainability")
 
     categorical=["CASH_IN_type","CASH_OUT_type", "DEBIT_type", "PAYMENT_type", "TRANSFER_type","isFraud"]
-
+    feature_names=["amount", "newbalanceOrig", "oldbalanceDest", "newbalanceDest", "oldbalanceOrig"]
     record_training_stats(
         train_df,
         features=feature_names,

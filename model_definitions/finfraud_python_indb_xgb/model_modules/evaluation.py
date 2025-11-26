@@ -77,8 +77,7 @@ def evaluate(context: ModelContext, **kwargs):
     # Load the test data from Teradata
     test_df = DataFrame.from_query(context.dataset_info.sql)
 
-    print(test_df)
-    print(model)
+
 
     # Make predictions using the XGBoostPredict function
     print("Evaluating ...........")
@@ -102,7 +101,6 @@ def evaluate(context: ModelContext, **kwargs):
         target_datatype = ["INTEGER"]
     )
 
-    print(predicted_data)
 
     # Evaluate classification metrics using ClassificationEvaluator
     ClassificationEvaluator_obj = ClassificationEvaluator(
@@ -115,7 +113,6 @@ def evaluate(context: ModelContext, **kwargs):
      # Extract and store evaluation metrics
 
     metrics_pd = ClassificationEvaluator_obj.output_data.to_pandas()
-    print(metrics_pd)
 
     evaluation = {
         'Accuracy': '{:.2f}'.format(metrics_pd.MetricValue[0]),
@@ -167,8 +164,6 @@ def evaluate(context: ModelContext, **kwargs):
     predictions_table = "Fin_Fraud_Predictions"
     copy_to_sql(df=predicted_data.result, table_name=predictions_table, index=False, if_exists="replace", temporary=True)
 
-    print("test_df", test_df)
-    print("predicted_data", predicted_data.result)
 
     # calculate stats if training stats exist
     # if os.path.exists(f"{context.artifact_input_path}/data_stats.json"):
