@@ -5,8 +5,8 @@
         "seed":42,
         "shrinkage_factor":0.1,
         "max_depth":7,
-        "temp_tb_dbanme": "DEMO_USER",
-        "temp_vw_dbname": "DEMO_USER",
-        "perm_tb_dbname": "modelops"
+        "temp_tb_dbanme":"DEMO_USER",
+        "temp_vw_dbname":"DEMO_USER",
+        "perm_tb_dbname":"modelops"
     }
 }
