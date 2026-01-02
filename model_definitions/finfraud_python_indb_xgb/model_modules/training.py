@@ -87,6 +87,13 @@ def train(context: ModelContext, **kwargs):
     target_name = context.dataset_info.target_names[0]
     entity_key = context.dataset_info.entity_key
 
+    temp_db = context.hyperparams["temp_tb_dbanme"]
+    view_db = context.hyperparams["temp_vw_dbname"]
+    perm_db = context.hyperparams["perm_tb_dbname"]
+
+    print(f"temp db is {temp_db} , view db is {view_db} and perm db is {perm_db}")
+
+
     # Load the training data from Teradata
     train_df = DataFrame.from_query(context.dataset_info.sql)
 
