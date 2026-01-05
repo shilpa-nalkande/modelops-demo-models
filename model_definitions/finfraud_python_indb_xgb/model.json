@@ -1,6 +1,6 @@
 {
-    "id": "775f312g-8f59-4d72-b269-3f0579cb1193",
+    "id": "878488a5-58c6-46e4-9082-78b448e18d75	",
     "name": "In-database Fin Fraud Prediction XGB",
-    "description": "In-database XGB for Financial Fraud Prediction",
+    "description": "Test Hyper In-database XGB for Financial Fraud Prediction",
     "language": "python"
 }
