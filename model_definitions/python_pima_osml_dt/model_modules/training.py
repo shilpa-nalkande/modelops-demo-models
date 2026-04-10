@@ -42,6 +42,7 @@ def plot_feature_importance(fi, img_filename):
     fig.savefig(img_filename, dpi=500)
     plt.clf()
     
+    
 def train(context: ModelContext, **kwargs):
     aoa_create_context()
     
@@ -76,10 +77,11 @@ def train(context: ModelContext, **kwargs):
          
     print("Starting training using teradata osml...")
 
-    DT_classifier = osml.DecisionTreeClassifier(random_state=context.hyperparams["random_state"]
-                                                ,max_leaf_nodes=context.hyperparams["max_leaf_nodes"]
+    DT_classifier = osml.DecisionTreeClassifier(random_state=int(context.hyperparams["random_state"])
+                                                ,max_leaf_nodes=int(context.hyperparams["max_leaf_nodes"])
                                                 ,max_features=context.hyperparams["max_features"]
-                                                ,max_depth=context.hyperparams["max_depth"])
+                                                ,max_depth=int(context.hyperparams["max_depth"]))
+    
     DT_classifier.fit(X_train, y_train)
     DT_classifier.deploy(model_name="DT_classifier", replace_if_exists=True)
         
@@ -88,6 +90,7 @@ def train(context: ModelContext, **kwargs):
     # Calculate feature importance and generate plot
     feature_importance = compute_feature_importance(DT_classifier.modelObj,X_train)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
+
     
     record_training_stats(
         train_df,
