@@ -97,7 +97,7 @@ def train(context: ModelContext, **kwargs):
         features=feature_names,
         targets=[target_name],
         categorical=[target_name],
-        feature_importance=feature_importance,
+        # feature_importance=feature_importance,
         context=context
     )
     
