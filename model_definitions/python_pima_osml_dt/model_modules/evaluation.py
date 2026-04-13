@@ -171,8 +171,8 @@ def evaluate(context: ModelContext, **kwargs):
     
     plot_roc_curve(predict_df.to_pandas(), f"{context.artifact_output_path}/roc_curve")
     
-    feature_importance = compute_feature_importance(DT_classifier.modelObj,X_test)
-    plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
+    # feature_importance = compute_feature_importance(DT_classifier.modelObj,X_test)
+    # plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
     
     
     predictions_table = "predictions_tmp"
