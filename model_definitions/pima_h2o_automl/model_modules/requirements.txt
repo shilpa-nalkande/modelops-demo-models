@@ -1,6 +1,7 @@
-teradataml==20.0.0.10
-teradatamodelops==7.2.4
+teradatamodelops==7.1.8
+teradataml==20.0.0.8
 matplotlib==3.10.8
 scikit-learn==1.5.2
 h2o==3.44.0.3
 install-jdk==1.1.0
+numpy==1.26.4
