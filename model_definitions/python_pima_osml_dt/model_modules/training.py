@@ -42,7 +42,6 @@ def plot_feature_importance(fi, img_filename):
     fig.savefig(img_filename, dpi=500)
     plt.clf()
     
-    
 def train(context: ModelContext, **kwargs):
     aoa_create_context()
     
@@ -90,14 +89,13 @@ def train(context: ModelContext, **kwargs):
     # Calculate feature importance and generate plot
     feature_importance = compute_feature_importance(DT_classifier.modelObj,X_train)
     plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
-
     
     record_training_stats(
         train_df,
         features=feature_names,
         targets=[target_name],
         categorical=[target_name],
-        # feature_importance=feature_importance,
+        feature_importance=feature_importance,
         context=context
     )
     

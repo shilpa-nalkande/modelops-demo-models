@@ -184,7 +184,7 @@ def evaluate(context: ModelContext, **kwargs):
         record_evaluation_stats(
             features_df=test_df,
             predicted_df=DataFrame.from_query(f"SELECT * FROM {predictions_table}"),
-            # feature_importance=feature_importance,
+            feature_importance=feature_importance,
             context=context
         )
 
