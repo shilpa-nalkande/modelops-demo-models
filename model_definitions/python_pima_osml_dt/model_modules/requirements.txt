@@ -3,3 +3,4 @@ teradatamodelops==7.1.8
 matplotlib==3.10.8
 scikit-learn==1.5.2
 shap==0.43.0
+numpy==1.26.4
